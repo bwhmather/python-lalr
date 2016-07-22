@@ -45,16 +45,20 @@ class Production(object):
 class Grammar(object):
 
     def __init__(self, productions, terminals):
-        self._productions = productions
-        self._terminals = terminals
+        self._productions = frozenset(productions)
+        self._terminals = frozenset(terminals)
 
     @property
     def terminals(self):
-        return self._terminals
+        return set(self._terminals)
 
     @property
     def nonterminals(self):
-        return {production.name for name in self.productions}
+        return {production.name for production in self.productions()}
+
+    @property
+    def symbols(self):
+        return set.union(self.terminals, self.nonterminals)
 
     def productions(self, name=None):
         if name is None:
@@ -64,6 +68,71 @@ class Grammar(object):
             production for production in self._productions
             if production.name == name
         }
+
+
+def build_first_sets(grammar):
+    """Returns a map from symbols to sets of terminals that can appear as the
+    first terminal in that symbol.  Terminal symbols obviously just map to a
+    set containing only themselves
+
+    This can be created without needing to look at item sets.
+    This requires that the grammar rules are epsilon free.
+    """
+    # A map from symbols to sets of symbols for which there exist productions
+    # where the first symbol is the first element
+    has_first_symbol = {}
+
+    for rule in grammar.productions():
+        has_first_symbol.setdefault(rule.symbols[0], set()).add(rule.name)
+
+    # A map from symbols to the set of terminals which can appear as the first
+    # terminal in a string that the symbol matches
+    first_sets = {}
+
+    for terminal in grammar.terminals:
+        # TODO if this is needed it should be folded into the inner loop.
+        # kept separate for now so that it's very clear what is happening
+        first_sets[terminal] = {terminal}
+
+        if terminal not in has_first_symbol:
+            continue
+
+        queue = set(has_first_symbol[terminal])
+
+        # The set of non-terminals to which the terminal has been added.  This
+        # is checked before adding more non-terminals to the queue so we do not
+        # need to check if a terminal has already been added to the first set
+        # when pulling an item off it.
+        done = set()
+
+        while queue:
+            nonterminal = queue.pop()
+            first_sets.setdefault(nonterminal, set()).add(terminal)
+            # It is important to add the non-terminal to done before updating
+            # the queue to avoid infinite loops on self-recursive symbols
+            done.add(nonterminal)
+
+            if nonterminal not in has_first_symbol:
+                continue
+
+            queue.update(
+                set.difference(has_first_symbol[nonterminal], done),
+            )
+
+    assert (
+        set(first_sets) == set.union(grammar.terminals, grammar.nonterminals)
+    )
+
+    # First sets should contain only terminals
+    assert not any(
+        set.difference(first_set, grammar.terminals)
+        for first_set in first_sets.values()
+    )
+
+    # There should be a first set for every terminal and non-terminal
+    assert grammar.symbols == set(first_sets)
+
+    return first_sets
 
 
 class Item(object):

@@ -29,8 +29,6 @@ class ItemSetTestCase(unittest.TestCase):
             lalr.Item(lalr.Production('A', ('a',))),
         })
 
-
-class ItemSetTestCase(unittest.TestCase):
     def test_example(self):
         grammar = lalr.Grammar([
             lalr.Production("S", ("N",)),
@@ -40,7 +38,7 @@ class ItemSetTestCase(unittest.TestCase):
             lalr.Production("V", ("x",)),
             lalr.Production("V", ("*", "E")),
         ], {"x", "=", "*"})
-        print(grammar)
+
         sets, transitions = lalr.build_transition_table(grammar, "S")
 
         for num, item_set in enumerate(sets):
@@ -51,10 +49,46 @@ class ItemSetTestCase(unittest.TestCase):
 
             print(transitions[num])
 
-        
+
+class FirstSetsTestCase(unittest.TestCase):
+    def test_loop(self):
+        grammar = lalr.Grammar([
+            lalr.Production("A", ("B",)),
+            lalr.Production("A", ("x",)),
+            lalr.Production("B", ("A",)),
+        ], {"x"})
+
+        self.assertEqual(lalr.build_first_sets(grammar), {
+            "x": {"x"},
+            "A": {"x"},
+            "B": {"x"},
+        })
+
+    def test_example(self):
+        grammar = lalr.Grammar([
+            lalr.Production("S", ("N",)),
+            lalr.Production("N", ("V", "=", "E")),
+            lalr.Production("N", ("E",)),
+            lalr.Production("E", ("V",)),
+            lalr.Production("V", ("x",)),
+            lalr.Production("V", ("*", "E")),
+        ], {"x", "=", "*"})
+
+        self.assertEqual(lalr.build_first_sets(grammar), {
+            "x": {"x"},
+            "=": {"="},
+            "*": {"*"},
+            "S": {"*", "x"},
+            "N": {"*", "x"},
+            "N": {"*", "x"},
+            "E": {"*", "x"},
+            "V": {"*", "x"},
+            "V": {"*", "x"},
+        })
 
 
 loader = unittest.TestLoader()
 suite = unittest.TestSuite((
     loader.loadTestsFromTestCase(ItemSetTestCase),
+    loader.loadTestsFromTestCase(FirstSetsTestCase),
 ))
