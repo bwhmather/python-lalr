@@ -2,6 +2,18 @@ _START_SYMBOL = '_S'  # TODO
 _EOF = '_$'  # TODO
 
 
+class ConflictError(Exception):
+    pass
+
+
+class ShiftReduceConflictError(ConflictError):
+    pass
+
+
+class ReduceReduceConflictError(ConflictError):
+    pass
+
+
 class Production(object):
 
     __slots__ = ('_name', '_symbols')
@@ -231,7 +243,11 @@ class Item(object):
         if self._cursor >= len(self.production):
             raise Exception("out of bounds")
 
-        return Item(self.production, cursor=self.cursor)
+        return Item(
+            self.production,
+            cursor=self._cursor + 1,
+            follow_set=self.follow_set
+        )
 
 
 class ItemSet(object):
@@ -245,8 +261,6 @@ class ItemSet(object):
 
     @property
     def derived(self):
-        if self._derived is None:
-            self._derived = _build_derived_items(self.grammar, self.kernel)
         return set(self._derived)
 
     @property
@@ -268,19 +282,8 @@ class ItemSet(object):
             terminals.update(item.terminals())
         return terminals
 
-    def following(self):
-        subsets = {}
-
-        for item in self.items:
-            if item.expected:
-                n = item.expected[0]
-                subsets.setdefault(n, set())
-                subsets[n].update(shift(item))
-
-        return set(subsets.items)
-
     def __eq__(self, other):
-        return self.items == other.items
+        return self.kernel == other.kernel
 
 
 def _build_derived_items(grammar, kernel):
@@ -393,29 +396,26 @@ def _build_derived_items(grammar, kernel):
     )
 
 
-
 def merge_items(a, b):
     if a.production != b.production or a.cursor != b.cursor:
         raise Exception('Item cores do not match')
 
-    return Item(a.production, a.cursor, set.union(a.follow_set, b.follow_set))
+    return Item(a.production, a._cursor, set.union(a.follow_set, b.follow_set))
 
 
-def merge_item_sets(sa, sb):
-    assert sa.grammar == sb.grammar
-
-    a_items_by_core = {
-        (item.matched, item.expected): item for item in sa.kernel
+def merge_kernels(kernel_a, kernel_b):
+    items_by_core_a = {
+        (item.matched, item.expected): item for item in kernel_a.kernel
     }
-    b_items_by_core = {
-        (item.matched, item.expected): item for item in sa.kernel
+    items_by_core_b = {
+        (item.matched, item.expected): item for item in kernel_b.kernel
     }
 
-    assert set(a_items_by_core) == set(b_items_by_core)
+    assert set(items_by_core_a) == set(items_by_core_b)
 
-    return ItemSet(grammar, {
-        merge_items(a_items_by_core[core], b_items_by_core[core])
-        for core in a_items_by_core
+    return ItemSet({
+        merge_items(items_by_core_a[core], items_by_core_b[core])
+        for core in items_by_core_a
     })
 
 
@@ -471,7 +471,6 @@ def build_transition_table(grammar, target):
     # TODO does the starting item need to be put in this map?
     item_sets_by_core = {}
 
-
     for kernel in kernel_queue:
         if _kernel_core(kernel) in item_sets_by_core:
             item_set_index = item_sets_by_core[_kernel_core(kernel)]
@@ -507,12 +506,13 @@ def build_shift_table(grammar, item_sets, item_set_transitions):
     '''
     shifts = []
     for transitions in item_set_transitions:
-        shifts.append(
-            symbol: state,
+        shifts.append({
+            symbol: state
             for symbol, state in item_set_transitions
             if grammar.is_terminal(symbol)
-        )
+        })
     return shifts
+
 
 def build_goto_table(grammar, item_sets, item_set_transitions):
     '''Returns a list of dictionaries mapping from non-terminal symbols to the
@@ -522,15 +522,15 @@ def build_goto_table(grammar, item_sets, item_set_transitions):
     '''
     gotos = []
     for transitions in item_set_transitions:
-        gotos.append(
-            symbol: state,
+        gotos.append({
+            symbol: state
             for symbol, state in item_set_transitions
             if grammar.is_nonterminal(symbol)
-        )
+        })
     return gotos
 
 
-def build_reduction_table(grammar, *args):
+def build_reduction_table(grammar, item_sets, item_set_transitions):
     '''Returns a list of dictionaries mapping from terminal symbols to reduce
     actions.
 
@@ -538,30 +538,22 @@ def build_reduction_table(grammar, *args):
     The items in the list of reduction dictionaries correspond to items in the
     list of item sets.
     '''
-    pass
+    reductions = []
+    for item_set in item_sets:
+        item_set_reductions = {}
+        for item in item_set:
+            if item.expected:
+                continue
+
+            for terminal in item.follow_set:
+                if terminal in item_set_reductions:
+                    raise ReduceReduceConflictError()
+                item_set_reductions[terminal] = item.production
+        reductions.append(item_set_reductions)
+    return reductions
 
 
 def check_shift_reduce_conflicts():
     '''Check for conflicts between a shift table and a reduce table
     '''
     pass
-
-
-def build_parse_table():
-    '''
-    :returns:
-        A list of dictionaries mapping from terminals to parser actions.  The
-        items in the list correspond to the grammar parse states.
-    '''
-    def _make_shift():
-        def _shift(parser):
-            parser.stack.push(state)
-            parser.advance()
-        return _shift
-
-    def _make_reduce(rule):
-        def _reduce(parser):
-            parser.stack.pop(len(rule))
-            parser.stack.push(gotos[rule.name])
-
-        return _reduce

@@ -31,7 +31,6 @@ class ItemSetTestCase(unittest.TestCase):
 
     def test_example(self):
         grammar = lalr.Grammar([
-            lalr.Production("S", ("N",)),
             lalr.Production("N", ("V", "=", "E")),
             lalr.Production("N", ("E",)),
             lalr.Production("E", ("V",)),
@@ -39,12 +38,14 @@ class ItemSetTestCase(unittest.TestCase):
             lalr.Production("V", ("*", "E")),
         ], {"x", "=", "*"})
 
-        sets, transitions = lalr.build_transition_table(grammar, "S")
+        sets, transitions = lalr.build_transition_table(grammar, "N")
 
         for num, item_set in enumerate(sets):
             print(num)
-            for item in item_set.items:
+            for item in item_set.kernel:
                 print(item)
+            for item in item_set.derived:
+                print('+ ' + str(item))
             print()
 
             print(transitions[num])
@@ -66,7 +67,6 @@ class FirstSetsTestCase(unittest.TestCase):
 
     def test_example(self):
         grammar = lalr.Grammar([
-            lalr.Production("S", ("N",)),
             lalr.Production("N", ("V", "=", "E")),
             lalr.Production("N", ("E",)),
             lalr.Production("E", ("V",)),
@@ -78,7 +78,6 @@ class FirstSetsTestCase(unittest.TestCase):
             "x": {"x"},
             "=": {"="},
             "*": {"*"},
-            "S": {"*", "x"},
             "N": {"*", "x"},
             "N": {"*", "x"},
             "E": {"*", "x"},
