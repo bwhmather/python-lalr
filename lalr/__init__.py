@@ -87,7 +87,7 @@ class Queue(object):
 
     def add(self, item):
         if item not in self._all:
-            self._queued += item
+            self._queued.append(item)
             self._all.add(item)
 
     def update(self, items):
@@ -435,10 +435,15 @@ def item_set_transitions(grammar, item_set):
         kernel = kernels.setdefault(symbol, set())
         kernel.add(Item(item.production, item.cursor + 1, item.follow_set))
 
-    return kernels
+    return {
+        symbol: frozenset(kernel)
+        for symbol, kernel in kernels.items()
+    }
+
 
 def _kernel_core(kernel):
     return frozenset((item.matched, item.expected) for item in kernel)
+
 
 def build_transition_table(grammar, target):
     '''Build the item sets, and map out the corresponding transitions for a
@@ -451,73 +456,48 @@ def build_transition_table(grammar, target):
     # A list of item sets.  Item sets are identified by index.  We initialise
     # it with a new item set with the start symbol as its kernel
     item_sets = []
- 
-    # A list of item set kernels.  This is gradually processed into the list
-    # of item sets
-    kernels = [
-        {starting_item},
-    ]
-
-    # A map from item set cores, frozen sets of tuples of visited and expected
-    # strings without a follow set, to item set indexes into the item set
-    # array.  This is only used internally.
-    # TODO does the starting item need to be put in this map?
-    kernels_by_core = {
-        _kernel_core(kernels[0]): 0,
-    }
 
     # A list, with items corresponding to the sets `item_sets`  of
     # dictionaries mapping from symbols to item set indexes
     transitions = []
 
-    # We eagerly add item sets to the item set list and gradually work our way
-    # through adding the corresponding transition dictionaries.  If we get to
-    # processing the last item set in the list and no more item sets need to be
-    # added, then we are done.
-    while len(item_sets) < len(kernels):
-        target_item_set = build_item_setitem_sets[len(transitions)]
-        target_transitions = {}
+    kernel_queue = Queue([
+        frozenset({starting_item})
+    ])
 
-        for symbol, item_set in item_set_transitions(
-            grammar, target_item_set
-        ).items():
-            # This merge step is what makes this an LALR parser generator.
-            # In an LR parser generator, we would include the follow sets in
-            # the comparison and dispense with the merging.
-            item_set_core = _item_set_core(item_set)
-            if item_set_core not in item_sets_by_core:
-                item_sets.append(item_set)
-                item_sets_by_core[item_set_core] = len(item_sets)
-            else:
-                item_sets[item_sets_by_core[item_sets]] = merge_item_sets(
-                    item_sets[item_sets_by_core[item_set_core]], item_set,
-                )
+    # A map from kernel cores, frozen sets of tuples of matched and expected
+    # strings without a follow set, to item set indexes.  This is used to do
+    # LALR state merging
+    # TODO does the starting item need to be put in this map?
+    item_sets_by_core = {}
 
-            # TODO complexity here could be much better
-            if item_set not in item_sets:
-                item_sets.append(item_set)
 
-            target_transitions[symbol] = item_sets.index(item_set)
+    for kernel in kernel_queue:
+        if _kernel_core(kernel) in item_sets_by_core:
+            item_set_index = item_sets_by_core[_kernel_core(kernel)]
+            kernel = merge_kernels(item_sets[item_set_index].kernel, kernel)
+            item_set = build_item_set(grammar, kernel)
+            item_sets[item_set_index] = item_set
+            transitions[item_set_index] = item_set_transitions(
+                grammar, item_set
+            )
+        else:
+            item_set_index = len(item_sets)
+            item_set = build_item_set(grammar, kernel)
+            item_sets_by_core[_kernel_core(kernel)] = item_set_index
+            item_sets.append(item_set)
+            transitions.append(item_set_transitions(grammar, item_set))
 
-        transitions.append(target_transitions)
+        kernel_queue.update(transitions[item_set_index].values())
 
+    transitions = [
+        {
+            symbol: item_sets_by_core[_kernel_core(kernel)]
+            for symbol, kernel in transition_map.items()
+        }
+        for transition_map in transitions
+    ]
     return item_sets, transitions
-
-
-def build_follow_sets(grammar, first_sets, item_sets, transitions):
-    """Build a map from item sets to sets of terminals that can come
-    immediately after them.
-
-    The map is represented as an array with elements corresponding to the
-    elements in `item_sets`.
-    """
-
-    for nonterminal in grammar.nonterminals:
-        pass
-
-    for production in grammar.productions:
-        for symbol in production.symbols:
-            pass
 
 
 def build_shift_table(grammar, *args):
