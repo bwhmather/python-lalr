@@ -70,6 +70,36 @@ class Grammar(object):
         }
 
 
+class Queue(object):
+    def __init__(self, items):
+        self._queued = list(items)
+        self._all = set(items)
+
+    def add(self, item):
+        if item not in self._all:
+            self._queued += item
+            self._all.add(item)
+
+    def update(self, items):
+        for item in items:
+            self.add(item)
+
+    def pop(self):
+        return self._queued.pop()
+
+    def __len__(self):
+        return len(self._queued)
+
+    def __bool__(self):
+        return bool(self._queued)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        return self.pop()
+
+
 def build_first_sets(grammar):
     """Returns a map from symbols to sets of terminals that can appear as the
     first terminal in that symbol.  Terminal symbols obviously just map to a
@@ -97,27 +127,13 @@ def build_first_sets(grammar):
         if terminal not in has_first_symbol:
             continue
 
-        queue = set(has_first_symbol[terminal])
-
-        # The set of non-terminals to which the terminal has been added.  This
-        # is checked before adding more non-terminals to the queue so we do not
-        # need to check if a terminal has already been added to the first set
-        # when pulling an item off it.
-        done = set()
+        queue = Queue(has_first_symbol[terminal])
 
         while queue:
             nonterminal = queue.pop()
             first_sets.setdefault(nonterminal, set()).add(terminal)
-            # It is important to add the non-terminal to done before updating
-            # the queue to avoid infinite loops on self-recursive symbols
-            done.add(nonterminal)
 
-            if nonterminal not in has_first_symbol:
-                continue
-
-            queue.update(
-                set.difference(has_first_symbol[nonterminal], done),
-            )
+            queue.update(has_first_symbol.get(nonterminal, set()))
 
     assert (
         set(first_sets) == set.union(grammar.terminals, grammar.nonterminals)
