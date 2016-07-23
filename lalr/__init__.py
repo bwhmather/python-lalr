@@ -270,20 +270,11 @@ class ItemSet(object):
             self.derived,
         )
 
-    def terminals(self):
-        terminals = set()
-        for item in self.items:
-            terminals.update(item.terminals())
-        return terminals
-
-    def nonterminals(self):
-        terminals = set()
-        for item in self.items:
-            terminals.update(item.terminals())
-        return terminals
-
     def __eq__(self, other):
         return self.kernel == other.kernel
+
+    def __iter__(self):
+        return iter(self.items)
 
 
 def _build_derived_items(grammar, kernel):
@@ -426,7 +417,7 @@ def build_item_set(grammar, kernel):
 def item_set_transitions(grammar, item_set):
     kernels = {}
 
-    for item in item_set.items:
+    for item in item_set:
         if not item.expected:
             continue
 
@@ -541,7 +532,7 @@ def build_reduction_table(grammar, item_sets, item_set_transitions):
     reductions = []
     for item_set in item_sets:
         item_set_reductions = {}
-        for item in item_set.items:
+        for item in item_set:
             if item.expected:
                 continue
 
