@@ -390,10 +390,10 @@ def _build_derived_items(grammar, kernel):
                 follow_sets[dependant].update(new_items)
 
     # Turn productions and follow sets into items
-    return frozenset(
+    return {
         Item(production, cursor=0, follow_set=follow_sets[production.name])
         for production in productions
-    )
+    }
 
 
 def merge_items(a, b):
@@ -413,10 +413,10 @@ def merge_kernels(kernel_a, kernel_b):
 
     assert set(items_by_core_a) == set(items_by_core_b)
 
-    return ItemSet({
+    return {
         merge_items(items_by_core_a[core], items_by_core_b[core])
         for core in items_by_core_a
-    })
+    }
 
 
 def build_item_set(grammar, kernel):
