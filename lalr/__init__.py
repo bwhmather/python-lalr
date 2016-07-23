@@ -508,7 +508,7 @@ def build_shift_table(grammar, item_sets, item_set_transitions):
     for transitions in item_set_transitions:
         shifts.append({
             symbol: state
-            for symbol, state in item_set_transitions
+            for symbol, state in transitions.items()
             if grammar.is_terminal(symbol)
         })
     return shifts
@@ -524,7 +524,7 @@ def build_goto_table(grammar, item_sets, item_set_transitions):
     for transitions in item_set_transitions:
         gotos.append({
             symbol: state
-            for symbol, state in item_set_transitions
+            for symbol, state in transitions.items()
             if grammar.is_nonterminal(symbol)
         })
     return gotos
@@ -541,7 +541,7 @@ def build_reduction_table(grammar, item_sets, item_set_transitions):
     reductions = []
     for item_set in item_sets:
         item_set_reductions = {}
-        for item in item_set:
+        for item in item_set.items:
             if item.expected:
                 continue
 
