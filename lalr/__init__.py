@@ -553,7 +553,9 @@ def build_reduction_table(grammar, item_sets, item_set_transitions):
     return reductions
 
 
-def check_shift_reduce_conflicts():
+def check_shift_reduce_conflicts(shifts, reductions):
     '''Check for conflicts between a shift table and a reduce table
     '''
-    pass
+    for item_set_shifts, item_set_reductions in zip(shifts, reductions):
+        if set.intersection(set(item_set_shifts), set(item_set_reductions)):
+            raise ShiftReduceConflictError()
