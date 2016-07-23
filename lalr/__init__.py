@@ -500,21 +500,34 @@ def build_transition_table(grammar, target):
     return item_sets, transitions
 
 
-def build_shift_table(grammar, *args):
+def build_shift_table(grammar, item_sets, item_set_transitions):
     '''Returns a list of maps from terminal symbols to shift actions.
 
     A shift action is simply an index into the item_set array.
     '''
-    pass
+    shifts = []
+    for transitions in item_set_transitions:
+        shifts.append(
+            symbol: state,
+            for symbol, state in item_set_transitions
+            if grammar.is_terminal(symbol)
+        )
+    return shifts
 
-
-def build_goto_table(grammar, *args):
+def build_goto_table(grammar, item_sets, item_set_transitions):
     '''Returns a list of dictionaries mapping from non-terminal symbols to the
     state that should follow.
 
     The items in the list correspond to items in the list of item sets.
     '''
-    pass
+    gotos = []
+    for transitions in item_set_transitions:
+        gotos.append(
+            symbol: state,
+            for symbol, state in item_set_transitions
+            if grammar.is_nonterminal(symbol)
+        )
+    return gotos
 
 
 def build_reduction_table(grammar, *args):
