@@ -5,12 +5,12 @@ import lalr
 
 class ItemSetTestCase(unittest.TestCase):
     def test_zero(self):
-
         grammar = lalr.Grammar(
             set(), {'a'},
         )
 
-        starting_item = lalr.Item(lalr.Production('S', ('a',)))
+        starting_item = lalr.Item(lalr.Production('S', ('a',)), 0, {'$'})
+
         item_set = lalr.build_item_set(grammar, {starting_item})
         self.assertEqual(item_set.items, {starting_item})
 
@@ -20,13 +20,13 @@ class ItemSetTestCase(unittest.TestCase):
             {'a'},
         )
 
-        starting_item = lalr.Item(lalr.Production('S', ('A',)))
+        starting_item = lalr.Item(lalr.Production('S', ('A',)), 0, {'$'})
 
         item_set = lalr.build_item_set(grammar, {starting_item})
 
         self.assertEqual(item_set.items, {
-            lalr.Item(lalr.Production('S', ('A',))),
-            lalr.Item(lalr.Production('A', ('a',))),
+            lalr.Item(lalr.Production('S', ('A',)), 0, {'$'}),
+            lalr.Item(lalr.Production('A', ('a',)), 0, {'$'}),
         })
 
     def test_example(self):
