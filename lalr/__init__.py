@@ -142,8 +142,10 @@ def build_first_sets(grammar):
     # where the first symbol is the first element
     has_first_symbol = {}
 
-    for rule in grammar.productions():
-        has_first_symbol.setdefault(rule.symbols[0], set()).add(rule.name)
+    for production in grammar.productions():
+        has_first_symbol.setdefault(
+            production.symbols[0], set()
+        ).add(production.name)
 
     # A map from symbols to the set of terminals which can appear as the first
     # terminal in a string that the symbol matches
@@ -530,7 +532,7 @@ def build_reduction_table(grammar, item_sets, item_set_transitions):
     '''Returns a list of dictionaries mapping from terminal symbols to reduce
     actions.
 
-    Reduce actions are represented simply by a reference to a rule.
+    Reduce actions are represented simply by a reference to a production.
     The items in the list of reduction dictionaries correspond to items in the
     list of item sets.
     '''
@@ -629,9 +631,9 @@ class Parser(object):
 
             # Reduce
             elif lookahead in self._reductions[this_state]:
-                rule = self._reductions[this_state][lookahead]
-                _pop(len(rule))
-                _push(self._gotos[state_stack[-1]][rule.name])
+                production = self._reductions[this_state][lookahead]
+                _pop(len(production))
+                _push(self._gotos[state_stack[-1]][production.name])
 
             else:
                 raise ParseError("unexpected token %r" % lookahead)
