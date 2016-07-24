@@ -1,5 +1,6 @@
 _START_SYMBOL = '_S'  # TODO
 _EOF = '_$'  # TODO
+_ACCEPT = -1  # TODO
 
 
 class ConflictError(Exception):
@@ -11,6 +12,10 @@ class ShiftReduceConflictError(ConflictError):
 
 
 class ReduceReduceConflictError(ConflictError):
+    pass
+
+
+class ParseError(Exception):
     pass
 
 
@@ -544,9 +549,89 @@ def build_reduction_table(grammar, item_sets, item_set_transitions):
     return reductions
 
 
+def build_accept_table(grammar, item_sets, items_set_transitions):
+    return [
+        any(
+            item.name == _START_SYMBOL and not item.expected
+            for item in item_set
+        )
+        for item_set in item_sets
+    ]
+
+
 def check_shift_reduce_conflicts(shifts, reductions):
     '''Check for conflicts between a shift table and a reduce table
     '''
     for item_set_shifts, item_set_reductions in zip(shifts, reductions):
         if set.intersection(set(item_set_shifts), set(item_set_reductions)):
             raise ShiftReduceConflictError()
+
+
+class Parser(object):
+    def __init__(self, item_sets, shifts, reductions, gotos, accepts):
+        """
+        :param item_sets:
+            A list of :class:`ItemSet` instances.
+        :param actions:
+            A list of maps from terminal symbols to actions.  The items in the
+            list correspond to states in the item set list.  An action is TODO
+        :param gotos:
+            A list of map from non-terminal symbols to state indices.  The
+            items in the list correspond to states in the item set list, as do
+            the indices in the maps.
+        """
+        # TODO figure out if it would make more sense to build these in the
+        # constructor from the grammar
+        self._item_sets = item_sets
+        self._shifts = shifts
+        self._reductions = reductions
+        self._gotos = gotos
+        self._accepts = accepts
+
+    def parse(self, tokens):
+        tokens = iter(tokens)
+        lookahead = None
+
+        state_stack = [0]
+        result_stack = []
+
+        def _peek():
+            return lookahead
+
+        def _advance():
+            nonlocal lookahead
+            try:
+                lookahead = next(tokens)
+            except StopIteration:
+                lookahead = _EOF
+
+        def _push(state):
+            state_stack.append(state)
+
+        def _pop(count):
+            result = tuple(state_stack[-count:])
+            del state_stack[-count:]
+            return result
+
+        _advance()
+        while True:
+            this_state = state_stack[-1]
+
+            if lookahead == _EOF and self._accepts[this_state]:
+                break
+
+            # Shift
+            elif lookahead in self._shifts[this_state]:
+                result_stack.append(lookahead)
+                next_state = self._shifts[this_state][lookahead]
+                _push(next_state)
+                _advance()
+
+            # Reduce
+            elif lookahead in self._reductions[this_state]:
+                rule = self._reductions[this_state][lookahead]
+                _pop(len(rule))
+                _push(self._gotos[state_stack[-1]][rule.name])
+
+            else:
+                raise ParseError("unexpected token %r" % lookahead)

@@ -86,8 +86,56 @@ class FirstSetsTestCase(unittest.TestCase):
         })
 
 
+class ParseTestCase(unittest.TestCase):
+    def test_example(self):
+        grammar = lalr.Grammar([
+            lalr.Production("N", ("V", "=", "E")),
+            lalr.Production("N", ("E",)),
+            lalr.Production("E", ("V",)),
+            lalr.Production("V", ("x",)),
+            lalr.Production("V", ("*", "E")),
+        ], {"x", "=", "*"})
+
+        item_sets, transitions = lalr.build_transition_table(grammar, "N")
+
+        shifts = lalr.build_shift_table(grammar, item_sets, transitions)
+        gotos = lalr.build_goto_table(grammar, item_sets, transitions)
+        reductions = lalr.build_reduction_table(
+            grammar, item_sets, transitions,
+        )
+        accepts = lalr.build_accept_table(grammar, item_sets, transitions)
+
+        parser = lalr.Parser(item_sets, shifts, reductions, gotos, accepts)
+
+        parser.parse(["x", "=", "*", "x"])
+
+    def test_bad_example(self):
+        grammar = lalr.Grammar([
+            lalr.Production("N", ("V", "=", "E")),
+            lalr.Production("N", ("E",)),
+            lalr.Production("E", ("V",)),
+            lalr.Production("V", ("x",)),
+            lalr.Production("V", ("*", "E")),
+        ], {"x", "=", "*"})
+
+        item_sets, transitions = lalr.build_transition_table(grammar, "N")
+
+        shifts = lalr.build_shift_table(grammar, item_sets, transitions)
+        gotos = lalr.build_goto_table(grammar, item_sets, transitions)
+        reductions = lalr.build_reduction_table(
+            grammar, item_sets, transitions,
+        )
+        accepts = lalr.build_accept_table(grammar, item_sets, transitions)
+
+        parser = lalr.Parser(item_sets, shifts, reductions, gotos, accepts)
+
+        with self.assertRaises(lalr.ParseError):
+            parser.parse(["x", "*", "x"])
+
+
 loader = unittest.TestLoader()
 suite = unittest.TestSuite((
     loader.loadTestsFromTestCase(ItemSetTestCase),
     loader.loadTestsFromTestCase(FirstSetsTestCase),
+    loader.loadTestsFromTestCase(ParseTestCase),
 ))
