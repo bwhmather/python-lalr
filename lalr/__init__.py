@@ -21,11 +21,12 @@ class ParseError(Exception):
 
 class Production(object):
 
-    __slots__ = ('_name', '_symbols')
+    __slots__ = ('_name', '_symbols', '_action')
 
-    def __init__(self, name, symbols):
+    def __init__(self, name, symbols, action=None):
         self._name = name
         self._symbols = tuple(symbols)
+        self._action = action
 
     @property
     def name(self):
@@ -34,6 +35,10 @@ class Production(object):
     @property
     def symbols(self):
         return self._symbols
+
+    @property
+    def action(self):
+        return self._action
 
     def __len__(self):
         return len(self.symbols)
@@ -53,13 +58,15 @@ class Production(object):
     def __eq__(self, other):
         return (
             self.name == other.name and
-            self.symbols == other.symbols
+            self.symbols == other.symbols and
+            self.action == other.action
         )
 
     def __hash__(self):
         return (
             hash(self.name) ^
-            hash(self.symbols)
+            hash(self.symbols) ^
+            hash(self.action)
         )
 
 
