@@ -3,7 +3,11 @@ _EOF = '_$'  # TODO
 _ACCEPT = -1  # TODO
 
 
-class ConflictError(Exception):
+class CompilationError(Exception):
+    pass
+
+
+class ConflictError(CompilationError):
     pass
 
 
