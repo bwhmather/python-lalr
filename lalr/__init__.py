@@ -648,3 +648,14 @@ class Parser(object):
 
             else:
                 raise ParseError("unexpected token %r" % lookahead)
+
+
+def compile(grammar, target):
+    item_sets, transitions = build_transition_table(grammar, target)
+
+    shifts = build_shift_table(grammar, item_sets, transitions)
+    gotos = build_goto_table(grammar, item_sets, transitions)
+    reductions = build_reduction_table(grammar, item_sets, transitions)
+    accepts = build_accept_table(grammar, item_sets, transitions)
+
+    return Parser(item_sets, shifts, reductions, gotos, accepts)
