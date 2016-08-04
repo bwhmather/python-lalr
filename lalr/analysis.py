@@ -306,7 +306,13 @@ def build_transition_table(grammar, target):
             item_sets.append(item_set)
             transitions.append(item_set_transitions(grammar, item_set))
 
-        kernel_queue.update(transitions[item_set_index].values())
+        # We sort the terminals so that item sets are assigned a deterministic
+        # order.  This makes testing much easier but is not completely
+        # necessary.
+        kernel_queue.update(
+            transitions[item_set_index][terminal]
+            for terminal in sorted(transitions[item_set_index])
+        )
 
     transitions = [
         {
