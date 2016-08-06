@@ -401,26 +401,42 @@ def _check_shift_reduce_conflicts(shifts, reductions):
             raise ShiftReduceConflictError()
 
 
+class _State(object):
+    __slots__ = {'_table', '_index'}
+
+    def __init__(self, table, index):
+        self._table = table
+        self._index = index
+
+    def __hash__(self):
+        return hash(self._index)
+
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+
+        return (
+            self._table._item_sets[self._index] ==
+            other._table._item_sets[self._index]
+        )
+
+
 class ParseTable(object):
     def __init__(self, grammar, target):
         item_sets, transitions = _build_transition_table(grammar, target)
-
-        self._states = range(len(item_sets))
+        self._item_sets, self._transitions = item_sets, transitions
 
         self._reductions = _build_reduction_table(
-            grammar, item_sets, transitions
+            grammar, item_sets, transitions,
         )
-
         self._shifts = _build_shift_table(
-            grammar, item_sets, transitions
+            grammar, item_sets, transitions,
         )
-
         self._gotos = _build_goto_table(
-            grammar, item_sets, transitions
+            grammar, item_sets, transitions,
         )
-
         self._accepts = _build_accept_table(
-            grammar, item_sets, transitions
+            grammar, item_sets, transitions,
         )
 
         _check_shift_reduce_conflicts(self._shifts, self._reductions)
@@ -428,10 +444,10 @@ class ParseTable(object):
     def states(self):
         """Returns an iterator over states identifiers in the parse table
         """
-        return iter(self._states)
+        return (_State(self, index) for index in range(len(self._item_sets)))
 
     def start_state(self):
-        return 0
+        return _State(self, 0)
 
     def reductions(self, state):
         """Returns a dictionary mapping from terminal symbols to reduce
@@ -439,7 +455,7 @@ class ParseTable(object):
 
         A reduce action is represented simply be a reference to a production.
         """
-        return MappingProxyType(self._reductions[state])
+        return MappingProxyType(self._reductions[state._index])
 
     def shifts(self, state):
         """For the given state, returns a dictionary mapping from terminal
@@ -447,16 +463,22 @@ class ParseTable(object):
 
         A shift action is simply an identifier for another state.
         """
-        return MappingProxyType(self._shifts[state])
+        return MappingProxyType({
+            terminal: _State(self, index)
+            for terminal, index in self._shifts[state._index].items()
+        })
 
     def gotos(self, state):
         """Returns a dictionary mapping from non terminal symbols to shift
         actions.
         """
-        return MappingProxyType(self._gotos[state])
+        return MappingProxyType({
+            nonterminal: _State(self, index)
+            for nonterminal, index in self._gotos[state._index].items()
+        })
 
     def accepts(self, state):
         """Returns True if and end-of-file token in the given state will result
         in the string being accepted.
         """
-        return self._accepts[state]
+        return self._accepts[state._index]

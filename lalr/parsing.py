@@ -37,6 +37,7 @@ class Parser(object):
 
         _advance()
         while True:
+            print(state_stack)
             if lookahead == EOF and self._parse_table.accepts(_top()):
                 break
 
