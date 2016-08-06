@@ -1,3 +1,6 @@
+from types import MappingProxyType
+
+from lalr.exceptions import ReduceReduceConflictError, ShiftReduceConflictError
 from lalr.utils import Queue
 from lalr.grammar import Production
 
@@ -6,7 +9,7 @@ START_SYMBOL = '_S'  # TODO
 EOF = '_$'  # TODO
 
 
-class Item(object):
+class _Item(object):
 
     __slots__ = ('_production', '_cursor', '_follow_set')
 
@@ -73,14 +76,14 @@ class Item(object):
         if self._cursor >= len(self.production):
             raise Exception("out of bounds")
 
-        return Item(
+        return _Item(
             self.production,
             cursor=self._cursor + 1,
             follow_set=self.follow_set
         )
 
 
-class ItemSet(object):
+class _ItemSet(object):
     def __init__(self, kernel, derived):
         self._kernel = frozenset(kernel)
         self._derived = frozenset(derived)
@@ -210,19 +213,21 @@ def _build_derived_items(grammar, kernel):
 
     # Turn productions and follow sets into items
     return {
-        Item(production, cursor=0, follow_set=follow_sets[production.name])
+        _Item(production, cursor=0, follow_set=follow_sets[production.name])
         for production in productions
     }
 
 
-def merge_items(a, b):
+def _merge_items(a, b):
     if a.production != b.production or a.cursor != b.cursor:
         raise Exception('Item cores do not match')
 
-    return Item(a.production, a._cursor, set.union(a.follow_set, b.follow_set))
+    return _Item(
+        a.production, a._cursor, set.union(a.follow_set, b.follow_set),
+    )
 
 
-def merge_kernels(kernel_a, kernel_b):
+def _merge_kernels(kernel_a, kernel_b):
     items_by_core_a = {
         (item.matched, item.expected): item for item in kernel_a.kernel
     }
@@ -233,16 +238,16 @@ def merge_kernels(kernel_a, kernel_b):
     assert set(items_by_core_a) == set(items_by_core_b)
 
     return {
-        merge_items(items_by_core_a[core], items_by_core_b[core])
+        _merge_items(items_by_core_a[core], items_by_core_b[core])
         for core in items_by_core_a
     }
 
 
-def build_item_set(grammar, kernel):
-    return ItemSet(kernel, _build_derived_items(grammar, kernel))
+def _build_item_set(grammar, kernel):
+    return _ItemSet(kernel, _build_derived_items(grammar, kernel))
 
 
-def item_set_transitions(grammar, item_set):
+def _item_set_transitions(grammar, item_set):
     kernels = {}
 
     for item in item_set:
@@ -252,7 +257,7 @@ def item_set_transitions(grammar, item_set):
         symbol, *rest = item.expected
 
         kernel = kernels.setdefault(symbol, set())
-        kernel.add(Item(item.production, item.cursor + 1, item.follow_set))
+        kernel.add(_Item(item.production, item.cursor + 1, item.follow_set))
 
     return {
         symbol: frozenset(kernel)
@@ -264,11 +269,11 @@ def _kernel_core(kernel):
     return frozenset((item.matched, item.expected) for item in kernel)
 
 
-def build_transition_table(grammar, target):
+def _build_transition_table(grammar, target):
     '''Build the item sets, and map out the corresponding transitions for a
     grammar that accepts the given target.
     '''
-    starting_item = Item(
+    starting_item = _Item(
         Production(START_SYMBOL, {target, }), cursor=0, follow_set={EOF},
     )
 
@@ -293,18 +298,18 @@ def build_transition_table(grammar, target):
     for kernel in kernel_queue:
         if _kernel_core(kernel) in item_sets_by_core:
             item_set_index = item_sets_by_core[_kernel_core(kernel)]
-            kernel = merge_kernels(item_sets[item_set_index].kernel, kernel)
-            item_set = build_item_set(grammar, kernel)
+            kernel = _merge_kernels(item_sets[item_set_index].kernel, kernel)
+            item_set = _build_item_set(grammar, kernel)
             item_sets[item_set_index] = item_set
-            transitions[item_set_index] = item_set_transitions(
+            transitions[item_set_index] = _item_set_transitions(
                 grammar, item_set
             )
         else:
             item_set_index = len(item_sets)
-            item_set = build_item_set(grammar, kernel)
+            item_set = _build_item_set(grammar, kernel)
             item_sets_by_core[_kernel_core(kernel)] = item_set_index
             item_sets.append(item_set)
-            transitions.append(item_set_transitions(grammar, item_set))
+            transitions.append(_item_set_transitions(grammar, item_set))
 
         # We sort the terminals so that item sets are assigned a deterministic
         # order.  This makes testing much easier but is not completely
@@ -322,3 +327,136 @@ def build_transition_table(grammar, target):
         for transition_map in transitions
     ]
     return item_sets, transitions
+
+
+def _build_shift_table(grammar, item_sets, item_set_transitions):
+    '''Returns a list of maps from terminal symbols to shift actions.
+
+    A shift action is simply an index into the item_set array.
+    '''
+    shifts = []
+    for transitions in item_set_transitions:
+        shifts.append({
+            symbol: state
+            for symbol, state in transitions.items()
+            if grammar.is_terminal(symbol)
+        })
+    return shifts
+
+
+def _build_goto_table(grammar, item_sets, item_set_transitions):
+    '''Returns a list of dictionaries mapping from non-terminal symbols to the
+    state that should follow.
+
+    The items in the list correspond to items in the list of item sets.
+    '''
+    gotos = []
+    for transitions in item_set_transitions:
+        gotos.append({
+            symbol: state
+            for symbol, state in transitions.items()
+            if grammar.is_nonterminal(symbol)
+        })
+    return gotos
+
+
+def _build_reduction_table(grammar, item_sets, item_set_transitions):
+    """Returns a list of dictionaries mapping from terminal symbols to reduce
+    actions.
+
+    Reduce actions are represented simply by a reference to a production.
+    The items in the list of reduction dictionaries correspond to items in the
+    list of item sets.
+    """
+    reductions = []
+    for item_set in item_sets:
+        item_set_reductions = {}
+        for item in item_set:
+            if item.expected:
+                continue
+
+            for terminal in item.follow_set:
+                if terminal in item_set_reductions:
+                    raise ReduceReduceConflictError()
+                item_set_reductions[terminal] = item.production
+        reductions.append(item_set_reductions)
+    return reductions
+
+
+def _build_accept_table(grammar, item_sets, items_set_transitions):
+    return [
+        any(
+            item.name == START_SYMBOL and not item.expected
+            for item in item_set
+        )
+        for item_set in item_sets
+    ]
+
+
+def _check_shift_reduce_conflicts(shifts, reductions):
+    """Check for conflicts between a shift table and a reduce table
+    """
+    for item_set_shifts, item_set_reductions in zip(shifts, reductions):
+        if set.intersection(set(item_set_shifts), set(item_set_reductions)):
+            raise ShiftReduceConflictError()
+
+
+class ParseTable(object):
+    def __init__(self, grammar, target):
+        item_sets, transitions = _build_transition_table(grammar, target)
+
+        self._states = range(len(item_sets))
+
+        self._reductions = _build_reduction_table(
+            grammar, item_sets, transitions
+        )
+
+        self._shifts = _build_shift_table(
+            grammar, item_sets, transitions
+        )
+
+        self._gotos = _build_goto_table(
+            grammar, item_sets, transitions
+        )
+
+        self._accepts = _build_accept_table(
+            grammar, item_sets, transitions
+        )
+
+        _check_shift_reduce_conflicts(self._shifts, self._reductions)
+
+    def states(self):
+        """Returns an iterator over states identifiers in the parse table
+        """
+        return iter(self._states)
+
+    def start_state(self):
+        return 0
+
+    def reductions(self, state):
+        """Returns a dictionary mapping from terminal symbols to reduce
+        actions.
+
+        A reduce action is represented simply be a reference to a production.
+        """
+        return MappingProxyType(self._reductions[state])
+
+    def shifts(self, state):
+        """For the given state, returns a dictionary mapping from terminal
+        symbols to shift actions.
+
+        A shift action is simply an identifier for another state.
+        """
+        return MappingProxyType(self._shifts[state])
+
+    def gotos(self, state):
+        """Returns a dictionary mapping from non terminal symbols to shift
+        actions.
+        """
+        return MappingProxyType(self._gotos[state])
+
+    def accepts(self, state):
+        """Returns True if and end-of-file token in the given state will result
+        in the string being accepted.
+        """
+        return self._accepts[state]

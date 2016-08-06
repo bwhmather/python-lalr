@@ -1,17 +1,17 @@
 import unittest
-from lalr.analysis import Item, build_item_set, build_transition_table
+from lalr.analysis import _Item, _build_item_set, _build_transition_table
 from lalr.grammar import Grammar, Production
 
 
-class ItemSetTestCase(unittest.TestCase):
+class _ItemSetTestCase(unittest.TestCase):
     def test_zero(self):
         grammar = Grammar([])
 
-        starting_item = Item(
+        starting_item = _Item(
             Production('S', ('a',)), 0, {'$'},
         )
 
-        item_set = build_item_set(grammar, {starting_item})
+        item_set = _build_item_set(grammar, {starting_item})
         self.assertEqual(item_set.items, {starting_item})
 
     def test_one(self):
@@ -19,15 +19,15 @@ class ItemSetTestCase(unittest.TestCase):
             Production('A', ('a',)),
         ])
 
-        starting_item = Item(
+        starting_item = _Item(
             Production('S', ('A',)), 0, {'$'},
         )
 
-        item_set = build_item_set(grammar, {starting_item})
+        item_set = _build_item_set(grammar, {starting_item})
 
         self.assertEqual(item_set.items, {
-            Item(Production('S', ('A',)), 0, {'$'}),
-            Item(Production('A', ('a',)), 0, {'$'}),
+            _Item(Production('S', ('A',)), 0, {'$'}),
+            _Item(Production('A', ('a',)), 0, {'$'}),
         })
 
     def test_example(self):
@@ -39,7 +39,7 @@ class ItemSetTestCase(unittest.TestCase):
             Production("V", ("*", "E")),
         ])
 
-        sets, transitions = build_transition_table(grammar, "N")
+        sets, transitions = _build_transition_table(grammar, "N")
 
         for num, item_set in enumerate(sets):
             print(num)
