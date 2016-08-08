@@ -16,6 +16,7 @@ class Parser(object):
         lookahead = None
 
         state_stack = [self._parse_table.start_state()]
+        result_stack = []
 
         def _top():
             return state_stack[-1]
@@ -27,31 +28,51 @@ class Parser(object):
             except StopIteration:
                 lookahead = EOF
 
-        def _push(state):
-            state_stack.append(state)
-
-        def _pop(count):
-            result = tuple(state_stack[-count:])
-            del state_stack[-count:]
-            return result
-
         _advance()
         while True:
-            print(state_stack)
             if lookahead == EOF and self._parse_table.accepts(_top()):
                 break
 
             # Shift
             elif lookahead in self._parse_table.shifts(_top()):
-                next_state = self._parse_table.shifts(_top())[lookahead]
-                _push(next_state)
+                state_stack.append(
+                    self._parse_table.shifts(_top())[lookahead],
+                )
+
+                result_stack.append(lookahead)
+
                 _advance()
 
             # Reduce
             elif lookahead in self._parse_table.reductions(_top()):
                 production = self._parse_table.reductions(_top())[lookahead]
-                _pop(len(production))
-                _push(self._parse_table.gotos(_top())[production.name])
+
+                # Pull the results for each of the symbols making up the
+                # production from the stack.
+                assert len(result_stack) >= len(production)
+                values = tuple(result_stack[-len(production):])
+                del result_stack[-len(production):]
+
+                # value = production.action(values)  # TODO
+                value = (production.name, values)
+                result_stack.append(value)
+
+                # Remove the intermediate states that have been added since the
+                # production started.  These are no longer needed as they
+                # cannot now appear just before the start of a new symbol.
+                assert len(state_stack) > len(production)
+                del state_stack[-len(production):]
+
+                # The top of the stack is now a state that contains an item
+                # with the cursor just before the symbol that was just parsed.
+                # From here we essentially do a shift, but with a non-terminal
+                # not a terminal.
+                state_stack.append(
+                    self._parse_table.gotos(_top())[production.name],
+                )
 
             else:
                 raise ParseError("unexpected token %r" % lookahead)
+
+        assert len(result_stack) == 1
+        return result_stack[0]
