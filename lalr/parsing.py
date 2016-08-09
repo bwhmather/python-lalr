@@ -11,7 +11,7 @@ class Parser(object):
 
         self._parse_table = ParseTable(grammar, target)
 
-    def parse(self, tokens):
+    def parse(self, tokens, state=None):
         tokens = iter(tokens)
         lookahead = None
 
@@ -53,8 +53,7 @@ class Parser(object):
                 values = tuple(result_stack[-len(production):])
                 del result_stack[-len(production):]
 
-                # value = production.action(values)  # TODO
-                value = (production.name, values)
+                value = production.action(*values, state=state)
                 result_stack.append(value)
 
                 # Remove the intermediate states that have been added since the
