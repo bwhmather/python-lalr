@@ -8,6 +8,9 @@ class Production(object):
     def __init__(self, name, symbols, action=None):
         self._name = name
         self._symbols = tuple(symbols)
+
+        if action is None:
+            action = lambda *values, state: None
         self._action = action
 
     @property
