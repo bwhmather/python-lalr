@@ -1,6 +1,10 @@
 from lalr.utils import Queue
 
 
+def _default_action(*values, state):
+    return None
+
+
 class Production(object):
 
     __slots__ = ('_name', '_symbols', '_action')
@@ -10,7 +14,7 @@ class Production(object):
         self._symbols = tuple(symbols)
 
         if action is None:
-            action = lambda *values, state: None
+            action = _default_action
         self._action = action
 
     @property
