@@ -1,9 +1,8 @@
 from lalr.exceptions import ParseError
-from lalr.grammar import Grammar
-from lalr.analysis import ParseTable, EOF
+from lalr.analysis import EOF
 
 
-def _parse(parse_table, tokens, action):
+def parse(parse_table, tokens, action):
     """
 
     :param tokens:
@@ -72,16 +71,3 @@ def _parse(parse_table, tokens, action):
 
     assert len(result_stack) == 1
     return result_stack[0]
-
-
-class Parser(object):
-    def __init__(self, productions, target):
-        grammar = Grammar(productions)
-
-        self._parse_table = ParseTable(grammar, target)
-
-    def parse(self, tokens, state=None):
-        def _action(production, *values):
-            return production.action(*values, state=state)
-
-        return _parse(self._parse_table, tokens, action=_action)
