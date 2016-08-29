@@ -272,9 +272,9 @@ def _kernel_core(kernel):
 
 
 def _build_transition_table(grammar, target):
-    '''Build the item sets, and map out the corresponding transitions for a
+    """Build the item sets, and map out the corresponding transitions for a
     grammar that accepts the given target.
-    '''
+    """
     starting_item = _Item(
         InternalProduction(START, {target, }), cursor=0, follow_set={EOF},
     )
@@ -332,10 +332,10 @@ def _build_transition_table(grammar, target):
 
 
 def _build_shift_table(grammar, item_sets, item_set_transitions):
-    '''Returns a list of maps from terminal symbols to shift actions.
+    """Returns a list of maps from terminal symbols to shift actions.
 
     A shift action is simply an index into the item_set array.
-    '''
+    """
     shifts = []
     for transitions in item_set_transitions:
         shifts.append({
@@ -347,11 +347,11 @@ def _build_shift_table(grammar, item_sets, item_set_transitions):
 
 
 def _build_goto_table(grammar, item_sets, item_set_transitions):
-    '''Returns a list of dictionaries mapping from non-terminal symbols to the
+    """Returns a list of dictionaries mapping from non-terminal symbols to the
     state that should follow.
 
     The items in the list correspond to items in the list of item sets.
-    '''
+    """
     gotos = []
     for transitions in item_set_transitions:
         gotos.append({
