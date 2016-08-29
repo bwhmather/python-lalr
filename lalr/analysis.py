@@ -21,13 +21,18 @@ class _Item(object):
     def __hash__(self):
         return (
             hash(self.production) ^
-            hash(self._cursor)
+            hash(self._cursor) ^
+            hash(self._follow_set)
         )
 
     def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+
         return (
             self.production == other.production and
-            self._cursor == other._cursor
+            self._cursor == other._cursor and
+            self._follow_set == other.follow_set
         )
 
     @property
