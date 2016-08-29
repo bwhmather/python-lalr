@@ -1,4 +1,13 @@
+import sys
+
 from setuptools import setup, find_packages
+
+
+install_requires = []
+if sys.version_info < (3, 5):
+    install_requires += [
+        'mypy-lang',
+    ]
 
 
 setup(
@@ -23,8 +32,7 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3 :: Only',
     ],
-    install_requires=[
-    ],
+    install_requires=install_requires,
     packages=find_packages(),
     package_data={
         '': ['*.*'],
