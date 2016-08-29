@@ -1,6 +1,7 @@
 from lalr.grammar import Grammar, Production
 from lalr.analysis import ParseTable
 from lalr.parsing import parse
+from lalr.constants import START, EMPTY, EOF
 
 
 class Parser(object):
@@ -29,3 +30,6 @@ class Parser(object):
 
 def compile(productions, target):
     return Parser(productions, target)
+
+
+__all__ = ['compile', 'START', 'EMPTY', 'EOF']

@@ -1,12 +1,9 @@
 from types import MappingProxyType
 
 from lalr.exceptions import ReduceReduceConflictError, ShiftReduceConflictError
+from lalr.constants import START, EOF
 from lalr.utils import Queue
 from lalr.grammar import Production
-
-
-START_SYMBOL = '_S'  # TODO
-EOF = '_$'  # TODO
 
 
 class _Item(object):
@@ -274,7 +271,7 @@ def _build_transition_table(grammar, target):
     grammar that accepts the given target.
     '''
     starting_item = _Item(
-        Production(START_SYMBOL, {target, }), cursor=0, follow_set={EOF},
+        Production(START, {target, }), cursor=0, follow_set={EOF},
     )
 
     # A list of item sets.  Item sets are identified by index.  We initialise
@@ -386,7 +383,7 @@ def _build_reduction_table(grammar, item_sets, item_set_transitions):
 def _build_accept_table(grammar, item_sets, items_set_transitions):
     return [
         any(
-            item.name == START_SYMBOL and not item.expected
+            item.name == START and not item.expected
             for item in item_set
         )
         for item_set in item_sets

@@ -1,5 +1,5 @@
 from lalr.exceptions import ParseError
-from lalr.analysis import EOF
+from lalr.constants import EOF
 
 
 def parse(parse_table, tokens, action):
