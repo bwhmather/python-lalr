@@ -1,6 +1,9 @@
+from collections import deque
+
+
 class Queue(object):
     def __init__(self, items=[]):
-        self._queued = list(items)
+        self._queued = deque(items)
         self._all = set(items)
 
     def add(self, item):
@@ -13,7 +16,7 @@ class Queue(object):
             self.add(item)
 
     def pop(self):
-        return self._queued.pop()
+        return self._queued.popleft()
 
     @property
     def processed(self):
