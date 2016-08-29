@@ -15,6 +15,10 @@ class Queue(object):
     def pop(self):
         return self._queued.pop()
 
+    @property
+    def processed(self):
+        return iter(set.difference(self._all, self._queued))
+
     def __len__(self):
         return len(self._queued)
 
