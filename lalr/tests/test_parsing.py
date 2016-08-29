@@ -1,7 +1,6 @@
 import unittest
 import lalr.exceptions
-from lalr.grammar import Production
-from lalr import Parser
+from lalr import Parser, Production
 
 
 class ParseTestCase(unittest.TestCase):

@@ -1,24 +1,24 @@
 import unittest
 
-from lalr.grammar import Grammar, Production
+from lalr.grammar import Grammar, InternalProduction
 
 
 class TerminalsTestCase(unittest.TestCase):
     def test_loop(self):
         grammar = Grammar([
-            Production("A", ("B",)),
-            Production("A", ("x",)),
-            Production("B", ("A",)),
+            InternalProduction("A", ("B",)),
+            InternalProduction("A", ("x",)),
+            InternalProduction("B", ("A",)),
         ], )
         self.assertEqual(grammar.terminals, {"x"})
 
     def test_example(self):
         grammar = Grammar([
-            Production("N", ("V", "=", "E")),
-            Production("N", ("E",)),
-            Production("E", ("V",)),
-            Production("V", ("x",)),
-            Production("V", ("*", "E")),
+            InternalProduction("N", ("V", "=", "E")),
+            InternalProduction("N", ("E",)),
+            InternalProduction("E", ("V",)),
+            InternalProduction("V", ("x",)),
+            InternalProduction("V", ("*", "E")),
         ])
         self.assertEqual(grammar.terminals, {"x", "=", "*"})
 
@@ -26,9 +26,9 @@ class TerminalsTestCase(unittest.TestCase):
 class FirstSetsTestCase(unittest.TestCase):
     def test_loop(self):
         grammar = Grammar([
-            Production("A", ("B",)),
-            Production("A", ("x",)),
-            Production("B", ("A",)),
+            InternalProduction("A", ("B",)),
+            InternalProduction("A", ("x",)),
+            InternalProduction("B", ("A",)),
         ])
 
         self.assertEqual(grammar.first_sets, {
@@ -39,11 +39,11 @@ class FirstSetsTestCase(unittest.TestCase):
 
     def test_example(self):
         grammar = Grammar([
-            Production("N", ("V", "=", "E")),
-            Production("N", ("E",)),
-            Production("E", ("V",)),
-            Production("V", ("x",)),
-            Production("V", ("*", "E")),
+            InternalProduction("N", ("V", "=", "E")),
+            InternalProduction("N", ("E",)),
+            InternalProduction("E", ("V",)),
+            InternalProduction("V", ("x",)),
+            InternalProduction("V", ("*", "E")),
         ])
 
         self.assertEqual(grammar.first_sets, {
