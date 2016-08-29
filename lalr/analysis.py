@@ -226,10 +226,10 @@ def _merge_items(a, b):
 
 def _merge_kernels(kernel_a, kernel_b):
     items_by_core_a = {
-        (item.matched, item.expected): item for item in kernel_a.kernel
+        (item.matched, item.expected): item for item in kernel_a
     }
     items_by_core_b = {
-        (item.matched, item.expected): item for item in kernel_b.kernel
+        (item.matched, item.expected): item for item in kernel_b
     }
 
     assert set(items_by_core_a) == set(items_by_core_b)
