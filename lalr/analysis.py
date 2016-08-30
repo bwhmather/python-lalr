@@ -74,16 +74,6 @@ class _Item(object):
     def __repr__(self):
         return '[' + str(self) + ']'
 
-    def shift(self):
-        if self._cursor >= len(self.production):
-            raise Exception("out of bounds")
-
-        return _Item(
-            self.production,
-            cursor=self._cursor + 1,
-            follow_set=self.follow_set
-        )
-
 
 class _ItemSet(object):
     def __init__(self, kernel, derived):
