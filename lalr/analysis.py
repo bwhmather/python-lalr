@@ -7,6 +7,10 @@ from lalr.grammar import InternalProduction
 
 
 class _Item(object):
+    """Class representing the progress of a parser through a production.
+
+    These are grouped into item sets, where each item represents one possible
+    """
 
     __slots__ = ('_production', '_cursor', '_follow_set')
 
@@ -37,30 +41,45 @@ class _Item(object):
 
     @property
     def cursor(self):
+        """A count of how many symbols in the production have been passed.
+        """
         return self._cursor
-
-    @property
-    def name(self):
-        return self.production.name
 
     @property
     def production(self):
         return self._production
 
     @property
+    def name(self):
+        """The symbol that the items production is an expansion of.
+        """
+        return self.production.name
+
+    @property
     def symbols(self):
+        """A tuple of the symbols in the production this item points to.
+        """
         return self.production.symbols
 
     @property
     def matched(self):
+        """A tuple of the symbols in the item's production that have already
+        been found by the parser.
+        """
         return tuple(self.production[:self._cursor])
 
     @property
     def expected(self):
+        """A tuple of the symbols in the item's production that will need to
+        be found for the whole production to be matched.
+        """
         return tuple(self.production[self._cursor:])
 
     @property
     def follow_set(self):
+        """The set of terminal symbols that can come next if the string matches
+        this production.
+        """
         return set(self._follow_set)
 
     def __str__(self):
