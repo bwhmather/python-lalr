@@ -1,3 +1,5 @@
+from types import MappingProxyType
+
 from lalr.utils import Queue
 
 
@@ -46,62 +48,26 @@ class InternalProduction(object):
 
 
 class Grammar(object):
-    def _build_first_sets(self):
-        """Returns a map from symbols to sets of terminals that can appear as
-        the first terminal in that symbol.  Terminal symbols obviously just
-        map to a set containing only themselves
+    def __init__(self, productions):
+        self._productions = frozenset(productions)
 
-        This can be created without needing to look at item sets.
-        This requires that the grammar rules are epsilon free.
-        """
-        # A map from symbols to sets of symbols for which there exist
-        # productions where the first symbol is the first element
-        has_first_symbol = {}
+        # Force first_sets property to evaluate
+        self.first_sets
 
-        for production in self.productions():
-            has_first_symbol.setdefault(
-                production.symbols[0], set()
-            ).add(production.name)
-
-        # A map from symbols to the set of terminals which can appear as the
-        # first terminal in a string that the symbol matches
-        first_sets = {}
-
-        for terminal in self.terminals:
-            # TODO if this is needed it should be folded into the inner loop.
-            # kept separate for now so that it's very clear what is happening
-            first_sets[terminal] = {terminal}
-
-            if terminal not in has_first_symbol:
-                continue
-
-            queue = Queue(has_first_symbol[terminal])
-
-            while queue:
-                nonterminal = queue.pop()
-                first_sets.setdefault(nonterminal, set()).add(terminal)
-
-                queue.update(has_first_symbol.get(nonterminal, set()))
-
+        # There must be a first set for every symbol in the grammar
         assert (
-            set(first_sets) ==
+            set(self.first_sets) ==
             set.union(self.terminals, self.nonterminals)
         )
 
         # First sets should contain only terminals
         assert not any(
             set.difference(first_set, self.terminals)
-            for first_set in first_sets.values()
+            for first_set in self.first_sets.values()
         )
 
         # There should be a first set for every terminal and non-terminal
-        assert self.symbols == set(first_sets)
-
-        self.first_sets = first_sets
-
-    def __init__(self, productions):
-        self._productions = frozenset(productions)
-        self._build_first_sets()
+        assert self.symbols == set(self.first_sets.keys())
 
     @property
     def terminals(self):
@@ -133,3 +99,46 @@ class Grammar(object):
             production for production in self._productions
             if production.name == name
         }
+
+    def _build_first_sets(self):
+        # A map from symbols to sets of symbols for which there exist
+        # productions where the first symbol is the first element
+        has_first_symbol = {}
+
+        for production in self.productions():
+            has_first_symbol.setdefault(
+                production.symbols[0], set()
+            ).add(production.name)
+
+        # A map from symbols to the set of terminals which can appear as the
+        # first terminal in a string that the symbol matches
+        first_sets = {}
+
+        for terminal in self.terminals:
+            # TODO if this is needed it should be folded into the inner loop.
+            # kept separate for now so that it's very clear what is happening
+            first_sets[terminal] = {terminal}
+
+            if terminal not in has_first_symbol:
+                continue
+
+            queue = Queue(has_first_symbol[terminal])
+
+            while queue:
+                nonterminal = queue.pop()
+                first_sets.setdefault(nonterminal, set()).add(terminal)
+
+                queue.update(has_first_symbol.get(nonterminal, set()))
+
+        return first_sets
+
+    @property
+    def first_sets(self):
+        """A map from symbols to sets of terminals that can appear as the first
+        terminal in that symbol.  Terminal symbols are included and just map to
+        a set containing only themselves
+        """
+        if not hasattr(self, '_first_sets'):
+            self._first_sets = MappingProxyType(self._build_first_sets())
+
+        return self._first_sets
