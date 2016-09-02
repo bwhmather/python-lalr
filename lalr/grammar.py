@@ -45,7 +45,7 @@ class InternalProduction(object):
         )
 
 
-def build_first_sets(grammar):
+def _build_first_sets(grammar):
     """Returns a map from symbols to sets of terminals that can appear as the
     first terminal in that symbol.  Terminal symbols obviously just map to a
     set containing only themselves
@@ -102,7 +102,7 @@ class Grammar(object):
 
     def __init__(self, productions):
         self._productions = frozenset(productions)
-        self.first_sets = build_first_sets(self)
+        self.first_sets = _build_first_sets(self)
 
     @property
     def terminals(self):
