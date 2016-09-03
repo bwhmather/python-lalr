@@ -48,6 +48,7 @@ class InternalProduction(object):
 
 
 class Grammar(object):
+
     def __init__(self, productions):
         self._productions = frozenset(productions)
 
@@ -71,14 +72,21 @@ class Grammar(object):
 
     @property
     def terminals(self):
+        """The set of all symbols that appear on the right hand side of one or
+        more productions but have no production of their own.
+        """
         return set.difference(self.symbols, self.nonterminals)
 
     @property
     def nonterminals(self):
+        """The set of all symbols for which there are production rules.
+        """
         return {production.name for production in self.productions()}
 
     @property
     def symbols(self):
+        """The set of all symbols, both terminal and non-terminal.
+        """
         symbols = set()
         for production in self.productions():
             symbols.add(production.name)
