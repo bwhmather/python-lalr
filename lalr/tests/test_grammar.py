@@ -51,8 +51,6 @@ class FirstSetsTestCase(unittest.TestCase):
             "=": {"="},
             "*": {"*"},
             "N": {"*", "x"},
-            "N": {"*", "x"},
             "E": {"*", "x"},
-            "V": {"*", "x"},
             "V": {"*", "x"},
         })
