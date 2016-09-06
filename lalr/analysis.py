@@ -10,6 +10,7 @@ class _Item(object):
     """Class representing the progress of a parser through a production.
 
     These are grouped into item sets, where each item represents one possible
+    location within a production given what has come before.
     """
 
     __slots__ = ('_production', '_cursor', '_follow_set')
@@ -413,6 +414,8 @@ def _check_shift_reduce_conflicts(shifts, reductions):
 
 
 class _State(object):
+    """An opaque reference type pointing to a state in a parse table.
+    """
     __slots__ = {'_table', '_index'}
 
     def __init__(self, table, index):
