@@ -34,5 +34,8 @@ class MiniLanguageTestCase(unittest.TestCase):
     def test_whitespace(self):
         symbols, bindings = _parse_production_spec('''
             symbol_a: binding_a
-            symbolb : binding_b
+            symbol_b : binding_b
         ''')
+
+        self.assertEqual(symbols, ('symbol_a', 'symbol_b'))
+        self.assertEqual(bindings, ('binding_a', 'binding_b'))
