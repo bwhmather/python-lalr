@@ -160,7 +160,18 @@ class Parser(object):
             else:
                 return self._actions[production](*values)
 
-        return parse(self._parse_table, tokens, action=_action)
+        return parse(
+            self._parse_table, tokens, action=_action,
+            token_symbol=self.token_symbol, token_value=self.token_symbol,
+        )
+
+    @staticmethod
+    def token_symbol(token):
+        return token
+
+    @staticmethod
+    def token_value(token):
+        return token
 
 
 def compile(productions, target):
