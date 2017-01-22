@@ -2,6 +2,10 @@ class CompilationError(Exception):
     pass
 
 
+class ProductionSpecParseError(CompilationError):
+    pass
+
+
 class ConflictError(CompilationError):
     pass
 

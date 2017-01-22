@@ -1,20 +1,77 @@
+import re
+
 from lalr.grammar import Grammar, InternalProduction
 from lalr.analysis import ParseTable
 from lalr.parsing import parse
-from lalr.constants import START, EMPTY, EOF
+from lalr.exceptions import ProductionSpecParseError
 
 
-def _default_action(*values, state):
+_default = object()
+
+
+_production_spec_symbol_re = re.compile(r'''
+    \s*
+    (?P<symbol>
+        [a-zA-Z0-9-_]+
+    )
+    (?:
+        \ *
+        :
+        \ *
+        (?P<binding>
+            [a-zA-Z0-9-_]+
+        )
+    )?
+    \s*
+''', re.VERBOSE)  # pylint: disable=no-member
+
+
+def _parse_production_spec(string):
+    cursor = 0
+
+    symbols = []
+    bindings = []
+
+    while cursor < len(string):
+        mo = _production_spec_symbol_re.match(string, cursor)
+        if mo is None:
+            raise ProductionSpecParseError('Invalid production spec.')
+
+        assert mo.group('symbol')
+
+        symbols.append(mo.group('symbol'))
+        bindings.append(mo.group('binding'))
+
+        cursor = mo.end()
+
+    return tuple(symbols), tuple(bindings)
+
+
+def _default_action(**kwargs):
     return None
 
 
 class Production(object):
 
-    __slots__ = ('_name', '_symbols', '_action')
+    __slots__ = ('_name', '_symbols', '_bindings', '_action')
 
-    def __init__(self, name, symbols, action=None):
+    def __init__(self, name, symbols, bindings=_default, action=None):
         self._name = name
-        self._symbols = tuple(symbols)
+
+        if isinstance(symbols, str):
+            if bindings is not _default:
+                raise TypeError(
+                    'Production expects either a string spec or tuples of '
+                    'symbols and bindings'
+                )
+
+            self._symbols, self._bindings = _parse_production_spec(symbols)
+        else:
+            self._symbols = tuple(symbols)
+
+            if bindings is _default:
+                bindings = tuple([None] * len(self._symbols))
+            self._bindings = tuple(bindings)
 
         if action is None:
             action = _default_action
@@ -26,11 +83,28 @@ class Production(object):
 
     @property
     def symbols(self):
+        """The tuple of symbols that the production matches
+        """
         return self._symbols
 
     @property
-    def action(self):
-        return self._action
+    def bindings(self):
+        """A tuple of optional argument names that describe how parsed symbols
+        should be passed to the action.
+        """
+        return self._bindings
+
+    def action(self, *values, state=_default):
+        kwargs = {
+            binding: value
+            for binding, value in zip(self.bindings, values)
+            if binding is not None
+        }
+
+        if state is not _default:
+            kwargs.update(state=state)
+
+        return self._action(**kwargs)
 
     def __len__(self):
         return len(self.symbols)
@@ -79,15 +153,15 @@ class Parser(object):
 
         self._parse_table = ParseTable(grammar, target)
 
-    def parse(self, tokens, state=None):
+    def parse(self, tokens, *, state=_default):
         def _action(production, *values):
-            return self._actions[production](*values, state=state)
+            if state is not _default:
+                return self._actions[production](*values, state=state)
+            else:
+                return self._actions[production](*values)
 
         return parse(self._parse_table, tokens, action=_action)
 
 
 def compile(productions, target):
     return Parser(productions, target)
-
-
-__all__ = ['compile', 'START', 'EMPTY', 'EOF']
