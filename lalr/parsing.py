@@ -18,12 +18,25 @@ def parse(
     """The parser automaton loop.  This is an internal function.
 
     :param tokens:
-        An iterable of :class:`Token` objects.
+        An iterable of token objects.  The token type is defined by the caller.
+        If tokens are anything other than a string, the caller will most likely
+        want to override the `token_symbol` and `token_value` functions.
 
     :param action:
         A callable that will be invoked after each reduce with a reference to
         the matched production followed by the computed value of each matched
         symbol within the production.
+
+    :param token_symbol:
+        An optional callable that takes a token and returns a string
+        identifying the symbol that the token represents.  The default
+        implementation returns the token, meaning that the input sequence must
+        be an iterable of strings.
+
+    :param token_value:
+        An optional callable that takes a token and returns the value that
+        should be pushed onto the result stack when the token is shifted.  The
+        default implementation just returns the token.
     """
     tokens = iter(tokens)
     lookahead_token = None
