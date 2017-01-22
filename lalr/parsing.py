@@ -2,14 +2,33 @@ from lalr.exceptions import ParseError
 from lalr.constants import EOF
 
 
-def parse(parse_table, tokens, action):
-    """
+def _default_token_symbol(token):
+    return token
+
+
+def _default_token_value(token):
+    return token
+
+
+def parse(
+    parse_table, tokens, *, action,
+    token_symbol=_default_token_symbol,
+    token_value=_default_token_value,
+):
+    """The parser automaton loop.  This is an internal function.
 
     :param tokens:
         An iterable of :class:`Token` objects.
+
+    :param action:
+        A callable that will be invoked after each reduce with a reference to
+        the matched production followed by the computed value of each matched
+        symbol within the production.
     """
     tokens = iter(tokens)
-    lookahead = None
+    lookahead_token = None
+    lookahead_symbol = None
+    lookahead_value = None
 
     state_stack = [parse_table.start_state()]
     result_stack = []
@@ -18,30 +37,39 @@ def parse(parse_table, tokens, action):
         return state_stack[-1]
 
     def _advance():
-        nonlocal lookahead
         try:
-            lookahead = next(tokens)
+            token = next(tokens)
         except StopIteration:
-            lookahead = EOF
+            token, symbol, value = None, EOF, None
+        else:
+            symbol, value = token_symbol(token), token_value(token)
+
+        # We modify the state variables at the end of the function to avoid
+        # partially clobbering them as a result of an error in either of the
+        # token lookup functions.
+        nonlocal lookahead_token, lookahead_symbol, lookahead_value
+        lookahead_token, lookahead_symbol, lookahead_value = (
+            token, symbol, value,
+        )
 
     _advance()
     while True:
-        if lookahead == EOF and parse_table.accepts(_top()):
+        if lookahead_symbol == EOF and parse_table.accepts(_top()):
             break
 
         # Shift
-        elif lookahead in parse_table.shifts(_top()):
+        elif lookahead_symbol in parse_table.shifts(_top()):
             state_stack.append(
-                parse_table.shifts(_top())[lookahead],
+                parse_table.shifts(_top())[lookahead_symbol],
             )
 
-            result_stack.append(lookahead)
+            result_stack.append(lookahead_value)
 
             _advance()
 
         # Reduce
-        elif lookahead in parse_table.reductions(_top()):
-            production = parse_table.reductions(_top())[lookahead]
+        elif lookahead_symbol in parse_table.reductions(_top()):
+            production = parse_table.reductions(_top())[lookahead_symbol]
 
             # Pull the results for each of the symbols making up the production
             # from the stack.
@@ -67,7 +95,7 @@ def parse(parse_table, tokens, action):
             )
 
         else:
-            raise ParseError("unexpected token %r" % lookahead)
+            raise ParseError(lookahead_token)
 
     assert len(result_stack) == 1
     return result_stack[0]
