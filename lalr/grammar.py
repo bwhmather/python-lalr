@@ -72,20 +72,23 @@ class Grammar(object):
 
     @property
     def terminals(self):
-        """The set of all symbols that appear on the right hand side of one or
+        """
+        The set of all symbols that appear on the right hand side of one or
         more productions but have no production of their own.
         """
         return set.difference(self.symbols, self.nonterminals)
 
     @property
     def nonterminals(self):
-        """The set of all symbols for which there are production rules.
+        """
+        The set of all symbols for which there are production rules.
         """
         return {production.name for production in self.productions()}
 
     @property
     def symbols(self):
-        """The set of all symbols, both terminal and non-terminal.
+        """
+        The set of all symbols, both terminal and non-terminal.
         """
         symbols = set()
         for production in self.productions():
@@ -142,7 +145,8 @@ class Grammar(object):
 
     @property
     def first_sets(self):
-        """A map from symbols to sets of terminals that can appear as the first
+        """
+        A map from symbols to sets of terminals that can appear as the first
         terminal in that symbol.  Terminal symbols are included and just map to
         a set containing only themselves
         """

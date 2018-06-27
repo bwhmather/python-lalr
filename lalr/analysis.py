@@ -7,7 +7,8 @@ from lalr.grammar import InternalProduction
 
 
 class _Item(object):
-    """Class representing the progress of a parser through a production.
+    """
+    Class representing the progress of a parser through a production.
 
     These are grouped into item sets, where each item represents one possible
     location within a production given what has come before.
@@ -42,7 +43,8 @@ class _Item(object):
 
     @property
     def cursor(self):
-        """A count of how many symbols in the production have been passed.
+        """
+        A count of how many symbols in the production have been passed.
         """
         return self._cursor
 
@@ -52,33 +54,38 @@ class _Item(object):
 
     @property
     def name(self):
-        """The symbol that the items production is an expansion of.
+        """
+        The symbol that the items production is an expansion of.
         """
         return self.production.name
 
     @property
     def symbols(self):
-        """A tuple of the symbols in the production this item points to.
+        """
+        A tuple of the symbols in the production this item points to.
         """
         return self.production.symbols
 
     @property
     def matched(self):
-        """A tuple of the symbols in the item's production that have already
-        been found by the parser.
+        """
+        A tuple of the symbols in the item's production that have already been
+        found by the parser.
         """
         return tuple(self.production[:self._cursor])
 
     @property
     def expected(self):
-        """A tuple of the symbols in the item's production that will need to
-        be found for the whole production to be matched.
+        """
+        A tuple of the symbols in the item's production that will need to be
+        found for the whole production to be matched.
         """
         return tuple(self.production[self._cursor:])
 
     @property
     def follow_set(self):
-        """The set of terminal symbols that can come next if the string matches
+        """
+        The set of terminal symbols that can come next if the string matches
         this production.
         """
         return set(self._follow_set)
@@ -123,14 +130,16 @@ class _ItemSet(object):
 
 
 def _build_derived_items(grammar, kernel):
-    """Given a core set of items and a grammar, recursively expand
-    non-terminals into new items until there are no non-terminals left.
+    """
+    Given a core set of items and a grammar, recursively expand non-terminals
+     into new items until there are no non-terminals left.
 
     :param grammar:
         A grammar, obviously.
 
     :param kernel:
-        A :class:`set` of :class:`Item`s that make up the kernel of an item set
+        A :class:`set` of :class:`Item`s that make up the kernel of an item
+        set.
     """
     # We assume that (with the exception of the starting symbol which we can't
     # reach from any other rule), the cursor will never appear at the beginning
@@ -282,7 +291,8 @@ def _kernel_core(kernel):
 
 
 def _build_transition_table(grammar, target):
-    """Build the item sets, and map out the corresponding transitions for a
+    """
+    Build the item sets, and map out the corresponding transitions for a
     grammar that accepts the given target.
     """
     starting_item = _Item(
@@ -342,7 +352,8 @@ def _build_transition_table(grammar, target):
 
 
 def _build_shift_table(grammar, item_sets, item_set_transitions):
-    """Returns a list of maps from terminal symbols to shift actions.
+    """
+    Returns a list of maps from terminal symbols to shift actions.
 
     A shift action is simply an index into the item_set array.
     """
@@ -357,7 +368,8 @@ def _build_shift_table(grammar, item_sets, item_set_transitions):
 
 
 def _build_goto_table(grammar, item_sets, item_set_transitions):
-    """Returns a list of dictionaries mapping from non-terminal symbols to the
+    """
+    Returns a list of dictionaries mapping from non-terminal symbols to the
     state that should follow.
 
     The items in the list correspond to items in the list of item sets.
@@ -373,7 +385,8 @@ def _build_goto_table(grammar, item_sets, item_set_transitions):
 
 
 def _build_reduction_table(grammar, item_sets, item_set_transitions):
-    """Returns a list of dictionaries mapping from terminal symbols to reduce
+    """
+    Returns a list of dictionaries mapping from terminal symbols to reduce
     actions.
 
     Reduce actions are represented simply by a reference to a production.
@@ -406,7 +419,8 @@ def _build_accept_table(grammar, item_sets, items_set_transitions):
 
 
 def _check_shift_reduce_conflicts(shifts, reductions):
-    """Check for conflicts between a shift table and a reduce table
+    """
+    Check for conflicts between a shift table and a reduce table
     """
     for item_set_shifts, item_set_reductions in zip(shifts, reductions):
         if set.intersection(set(item_set_shifts), set(item_set_reductions)):
@@ -414,7 +428,8 @@ def _check_shift_reduce_conflicts(shifts, reductions):
 
 
 class _State(object):
-    """An opaque reference type pointing to a state in a parse table.
+    """
+    An opaque reference type pointing to a state in a parse table.
     """
     __slots__ = {'_table', '_index'}
 
@@ -456,7 +471,8 @@ class ParseTable(object):
         _check_shift_reduce_conflicts(self._shifts, self._reductions)
 
     def states(self):
-        """Returns an iterator over states identifiers in the parse table
+        """
+        Returns an iterator over states identifiers in the parse table.
         """
         return (_State(self, index) for index in range(len(self._item_sets)))
 
@@ -464,16 +480,17 @@ class ParseTable(object):
         return _State(self, 0)
 
     def reductions(self, state):
-        """Returns a dictionary mapping from terminal symbols to reduce
-        actions.
+        """
+        Returns a dictionary mapping from terminal symbols to reduce actions.
 
         A reduce action is represented simply be a reference to a production.
         """
         return MappingProxyType(self._reductions[state._index])
 
     def shifts(self, state):
-        """For the given state, returns a dictionary mapping from terminal
-        symbols to shift actions.
+        """
+        For the given state, returns a dictionary mapping from terminal symbols
+        to shift actions.
 
         A shift action is simply an identifier for another state.
         """
@@ -483,7 +500,8 @@ class ParseTable(object):
         })
 
     def gotos(self, state):
-        """Returns a dictionary mapping from non terminal symbols to shift
+        """
+        Returns a dictionary mapping from non terminal symbols to shift
         actions.
         """
         return MappingProxyType({
@@ -492,7 +510,8 @@ class ParseTable(object):
         })
 
     def accepts(self, state):
-        """Returns True if and end-of-file token in the given state will result
-        in the string being accepted.
+        """
+        Returns True if and end-of-file token in the given state will result in
+        the string being accepted.
         """
         return self._accepts[state._index]

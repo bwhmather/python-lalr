@@ -15,7 +15,8 @@ def parse(
     token_symbol=_default_token_symbol,
     token_value=_default_token_value,
 ):
-    """The parser automaton loop.  This is an internal function.
+    """
+    The parser automaton loop.  This is an internal function.
 
     :param tokens:
         An iterable of token objects.  The token type is defined by the caller.
