@@ -1,4 +1,4 @@
-from typing import TypeVar, Generic, Iterable, Hashable
+from typing import TypeVar, Generic, Iterable, Hashable, Set, List
 
 
 T = TypeVar('T', bound=Hashable)
@@ -6,9 +6,15 @@ T = TypeVar('T', bound=Hashable)
 
 class Queue(Iterable[T], Generic[T]):
     def __init__(self, items: Iterable[T]=[]) -> None:
-        self._cursor = 0  # type: int
-        self._by_order = list()  # type: List[T]
-        self._by_identity = set()  # type: Set[T]
+        # The set of all items that have been added to the queue.
+        # TODO:  Benchmark to determine if this is actually faster.
+        self._by_identity: Set[T] = set()
+
+        # A list, in order, of all items that have been added to the queue.
+        self._by_order: List[T] = list()
+
+        # The index of the next item to be processed in the `_by_order` array.
+        self._cursor: int = 0
 
         self.update(items)
 
