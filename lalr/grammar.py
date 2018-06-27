@@ -26,7 +26,7 @@ class InternalProduction(object):
         return self.symbols[index]
 
     def __str__(self):
-        return "{name} → {symbols}".format(
+        return "{name} -> {symbols}".format(
             name=self.name,
             symbols=' '.join(str(symbol) for symbol in self.symbols),
         )

@@ -84,7 +84,7 @@ class _Item(object):
         return set(self._follow_set)
 
     def __str__(self):
-        return "{name} → {matched} • {expected}, {follow_set}".format(
+        return "{name} -> {matched} * {expected}, {follow_set}".format(
             name=self.name,
             matched=' '.join(str(symbol) for symbol in self.matched),
             expected=' '.join(str(symbol) for symbol in self.expected),
