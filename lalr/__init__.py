@@ -1,9 +1,9 @@
 import re
 
-from lalr.grammar import Grammar, InternalProduction
 from lalr.analysis import ParseTable
-from lalr.parsing import parse
 from lalr.exceptions import ProductionSpecParseError
+from lalr.grammar import Grammar, InternalProduction
+from lalr.parsing import parse
 
 
 _default = object()

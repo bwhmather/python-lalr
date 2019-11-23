@@ -1,4 +1,5 @@
 import unittest
+
 from lalr.utils import Queue
 
 

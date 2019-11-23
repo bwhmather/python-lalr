@@ -1,5 +1,5 @@
-from lalr.exceptions import ParseError
 from lalr.constants import EOF
+from lalr.exceptions import ParseError
 
 
 def _default_token_symbol(token):

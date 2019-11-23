@@ -1,9 +1,11 @@
 from types import MappingProxyType
 
-from lalr.exceptions import ReduceReduceConflictError, ShiftReduceConflictError
-from lalr.constants import START, EOF
-from lalr.utils import Queue
+from lalr.constants import EOF, START
+from lalr.exceptions import (
+    ReduceReduceConflictError, ShiftReduceConflictError,
+)
 from lalr.grammar import InternalProduction
+from lalr.utils import Queue
 
 
 class _Item(object):

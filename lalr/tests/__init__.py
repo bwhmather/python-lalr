@@ -1,8 +1,6 @@
 import unittest
-from lalr.tests import test_queue
-from lalr.tests import test_grammar
-from lalr.tests import test_analysis
-from lalr.tests import test_parsing
+
+from lalr.tests import test_analysis, test_grammar, test_parsing, test_queue
 
 
 loader = unittest.TestLoader()

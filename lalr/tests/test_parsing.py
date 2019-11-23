@@ -1,4 +1,5 @@
 import unittest
+
 import lalr.exceptions
 from lalr import Parser, Production, _parse_production_spec
 

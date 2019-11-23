@@ -1,5 +1,6 @@
 import unittest
-from lalr.analysis import _Item, _build_item_set, _build_transition_table
+
+from lalr.analysis import _build_item_set, _build_transition_table, _Item
 from lalr.grammar import Grammar, InternalProduction
 
 
