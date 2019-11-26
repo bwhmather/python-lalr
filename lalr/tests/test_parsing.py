@@ -1,3 +1,4 @@
+import enum
 import unittest
 
 import lalr.exceptions
@@ -66,3 +67,19 @@ class ParseTestCase(unittest.TestCase):
 
         with self.assertRaises(lalr.exceptions.ParseError):
             parser.parse(["x", "*", "x"])
+
+    def test_enum_terminals(self):
+        class Terminal(enum.Enum):
+            VAR = enum.auto()
+            EQ = enum.auto()
+            STAR = enum.auto()
+
+        parser = Parser([
+            Production("N", ("V", Terminal.EQ, "E")),
+            Production("N", ("E",)),
+            Production("E", ("V",)),
+            Production("V", (Terminal.VAR,)),
+            Production("V", (Terminal.STAR, "E")),
+        ], "N")
+
+        parser.parse([Terminal.VAR, Terminal.EQ, Terminal.STAR, Terminal.VAR])
