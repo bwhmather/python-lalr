@@ -335,12 +335,14 @@ def _build_transition_table(grammar, target):
             item_sets.append(item_set)
             transitions.append(_item_set_transitions(grammar, item_set))
 
-        # We sort the terminals so that item sets are assigned a deterministic
-        # order.  This makes testing much easier but is not completely
-        # necessary.
+        # TODO items are queued in an order that is predictable in practice,
+        # but technically non-deterministic.  This should have no effect when
+        # building a parser for valid grammars, but may impact error messages
+        # and testing.  Sort explicitly by first appearance of each terminal
+        # to fix.
         kernel_queue.update(
             transitions[item_set_index][terminal]
-            for terminal in sorted(transitions[item_set_index])
+            for terminal in transitions[item_set_index]
         )
 
     transitions = [
