@@ -1,0 +1,13 @@
+# Exclude everything by default.  Require individual files to be whitelisted.
+global-exclude *
+
+# Include python files.
+include setup.py
+recursive-include lalr *.py
+
+# Include type annotation stub files.
+include lalr/py.typed
+recursive-include lalr *.pyi
+
+# Include documentation.
+include README.rst LICENSE
