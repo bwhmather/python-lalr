@@ -83,3 +83,19 @@ class ParseTestCase(unittest.TestCase):
         ], "N")
 
         parser.parse([Terminal.VAR, Terminal.EQ, Terminal.STAR, Terminal.VAR])
+
+    def test_enum_nonterminals(self):
+        class NonTerminal(enum.Enum):
+            N = enum.auto()
+            E = enum.auto()
+            V = enum.auto()
+
+        parser = Parser([
+            Production(NonTerminal.N, (NonTerminal.V, "=", NonTerminal.E)),
+            Production(NonTerminal.N, (NonTerminal.E,)),
+            Production(NonTerminal.E, (NonTerminal.V,)),
+            Production(NonTerminal.V, ("x",)),
+            Production(NonTerminal.V, ("*", NonTerminal.E)),
+        ], NonTerminal.N)
+
+        parser.parse(["x", "=", "*", "x"])
