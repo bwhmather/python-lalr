@@ -207,7 +207,7 @@ def _build_derived_items(grammar, kernel):
                 # are added to the follow set of the current symbol
                 immediate_dependants.setdefault(
                     production.name, set()
-                ).update(first)
+                ).add(first)
 
             follow_sets.setdefault(first, set()).update(new_items)
 
