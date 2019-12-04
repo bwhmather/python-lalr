@@ -7,7 +7,7 @@ class InternalProduction(object):
 
     __slots__ = ('_name', '_symbols')
 
-    def __init__(self, name, symbols, action=None):
+    def __init__(self, name, symbols):
         self._name = name
         self._symbols = tuple(symbols)
 
