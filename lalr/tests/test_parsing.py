@@ -2,71 +2,42 @@ import enum
 import unittest
 
 import lalr.exceptions
-from lalr import Parser, Production, _parse_production_spec
+from lalr import Grammar, InternalProduction, ParseTable, parse
 
 
-class ProductionMiniLanguageTestCase(unittest.TestCase):
-    def test_symbol(self):
-        symbols, bindings = _parse_production_spec('a')
-
-        self.assertEqual(symbols, ('a',))
-        self.assertEqual(bindings, (None,))
-
-    def test_symbol_binding(self):
-        symbols, bindings = _parse_production_spec('symbol:binding')
-
-        self.assertEqual(symbols, ('symbol',))
-        self.assertEqual(bindings, ('binding',))
-
-    def test_multiple_symbol_bindings(self):
-        symbols, bindings = _parse_production_spec(
-            'symbol_a:binding_a symbol_b:binding_b',
-        )
-
-        self.assertEqual(symbols, ('symbol_a', 'symbol_b'))
-        self.assertEqual(bindings, ('binding_a', 'binding_b'))
-
-    def test_unbound_symbols(self):
-        symbols, bindings = _parse_production_spec(
-            'symbol_a symbol_b:binding_b',
-        )
-
-        self.assertEqual(symbols, ('symbol_a', 'symbol_b'))
-        self.assertEqual(bindings, (None, 'binding_b'))
-
-    def test_whitespace(self):
-        symbols, bindings = _parse_production_spec('''
-            symbol_a: binding_a
-            symbol_b : binding_b
-        ''')
-
-        self.assertEqual(symbols, ('symbol_a', 'symbol_b'))
-        self.assertEqual(bindings, ('binding_a', 'binding_b'))
+def nop(production, *args):
+    return production.name
 
 
 class ParseTestCase(unittest.TestCase):
-    def test_example(self):
-        parser = Parser([
-            Production("N", ("V", "=", "E")),
-            Production("N", ("E",)),
-            Production("E", ("V",)),
-            Production("V", ("x",)),
-            Production("V", ("*", "E")),
-        ], "N")
 
-        parser.parse(["x", "=", "*", "x"])
+    def test_example(self):
+        grammar = Grammar([
+            InternalProduction("N", ("V", "=", "E")),
+            InternalProduction("N", ("E",)),
+            InternalProduction("E", ("V",)),
+            InternalProduction("V", ("x",)),
+            InternalProduction("V", ("*", "E")),
+        ])
+        parse_table = ParseTable(grammar, "N")
+
+        self.assertEqual(
+            parse(parse_table, ["x", "=", "*", "x"], action=nop),
+            "N",
+        )
 
     def test_bad_example(self):
-        parser = Parser([
-            Production("N", ("V", "=", "E")),
-            Production("N", ("E",)),
-            Production("E", ("V",)),
-            Production("V", ("x",)),
-            Production("V", ("*", "E")),
-        ], "N")
+        grammar = Grammar([
+            InternalProduction("N", ("V", "=", "E")),
+            InternalProduction("N", ("E",)),
+            InternalProduction("E", ("V",)),
+            InternalProduction("V", ("x",)),
+            InternalProduction("V", ("*", "E")),
+        ])
+        parse_table = ParseTable(grammar, "N")
 
         with self.assertRaises(lalr.exceptions.ParseError):
-            parser.parse(["x", "*", "x"])
+            parse(parse_table, ["x", "*", "x"], action=nop)
 
     def test_enum_terminals(self):
         class Terminal(enum.Enum):
@@ -74,15 +45,21 @@ class ParseTestCase(unittest.TestCase):
             EQ = enum.auto()
             STAR = enum.auto()
 
-        parser = Parser([
-            Production("N", ("V", Terminal.EQ, "E")),
-            Production("N", ("E",)),
-            Production("E", ("V",)),
-            Production("V", (Terminal.VAR,)),
-            Production("V", (Terminal.STAR, "E")),
-        ], "N")
+        grammar = Grammar([
+            InternalProduction("N", ("V", Terminal.EQ, "E")),
+            InternalProduction("N", ("E",)),
+            InternalProduction("E", ("V",)),
+            InternalProduction("V", (Terminal.VAR,)),
+            InternalProduction("V", (Terminal.STAR, "E")),
+        ])
+        parse_table = ParseTable(grammar, "N")
 
-        parser.parse([Terminal.VAR, Terminal.EQ, Terminal.STAR, Terminal.VAR])
+        self.assertEqual(
+            parse(parse_table, [
+                Terminal.VAR, Terminal.EQ, Terminal.STAR, Terminal.VAR,
+            ], action=nop),
+            "N",
+        )
 
     def test_enum_nonterminals(self):
         class NonTerminal(enum.Enum):
@@ -90,12 +67,18 @@ class ParseTestCase(unittest.TestCase):
             E = enum.auto()
             V = enum.auto()
 
-        parser = Parser([
-            Production(NonTerminal.N, (NonTerminal.V, "=", NonTerminal.E)),
-            Production(NonTerminal.N, (NonTerminal.E,)),
-            Production(NonTerminal.E, (NonTerminal.V,)),
-            Production(NonTerminal.V, ("x",)),
-            Production(NonTerminal.V, ("*", NonTerminal.E)),
-        ], NonTerminal.N)
+        grammar = Grammar([
+            InternalProduction(
+                NonTerminal.N, (NonTerminal.V, "=", NonTerminal.E)
+            ),
+            InternalProduction(NonTerminal.N, (NonTerminal.E,)),
+            InternalProduction(NonTerminal.E, (NonTerminal.V,)),
+            InternalProduction(NonTerminal.V, ("x",)),
+            InternalProduction(NonTerminal.V, ("*", NonTerminal.E)),
+        ])
+        parse_table = ParseTable(grammar, NonTerminal.N)
 
-        parser.parse(["x", "=", "*", "x"])
+        self.assertEqual(
+            parse(parse_table, ["x", "=", "*", "x"], action=nop),
+            NonTerminal.N,
+        )
