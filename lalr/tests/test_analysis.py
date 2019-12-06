@@ -1,15 +1,16 @@
 import unittest
 
 from lalr.analysis import _build_item_set, _build_transition_table, _Item
-from lalr.grammar import Grammar, InternalProduction
+from lalr.grammar import Grammar, Production
 
 
 class _ItemSetTestCase(unittest.TestCase):
+
     def test_zero(self):
         grammar = Grammar([])
 
         starting_item = _Item(
-            InternalProduction('S', ('a',)), 0, {'$'},
+            Production('S', ('a',)), 0, {'$'},
         )
 
         item_set = _build_item_set(grammar, {starting_item})
@@ -17,27 +18,27 @@ class _ItemSetTestCase(unittest.TestCase):
 
     def test_one(self):
         grammar = Grammar([
-            InternalProduction('A', ('a',)),
+            Production('A', ('a',)),
         ])
 
         starting_item = _Item(
-            InternalProduction('S', ('A',)), 0, {'$'},
+            Production('S', ('A',)), 0, {'$'},
         )
 
         item_set = _build_item_set(grammar, {starting_item})
 
         self.assertEqual(item_set.items, {
-            _Item(InternalProduction('S', ('A',)), 0, {'$'}),
-            _Item(InternalProduction('A', ('a',)), 0, {'$'}),
+            _Item(Production('S', ('A',)), 0, {'$'}),
+            _Item(Production('A', ('a',)), 0, {'$'}),
         })
 
     def test_example(self):
         grammar = Grammar([
-            InternalProduction("N", ("V", "=", "E")),
-            InternalProduction("N", ("E",)),
-            InternalProduction("E", ("V",)),
-            InternalProduction("V", ("x",)),
-            InternalProduction("V", ("*", "E")),
+            Production("N", ("V", "=", "E")),
+            Production("N", ("E",)),
+            Production("E", ("V",)),
+            Production("V", ("x",)),
+            Production("V", ("*", "E")),
         ])
 
         sets, transitions = _build_transition_table(grammar, "N")

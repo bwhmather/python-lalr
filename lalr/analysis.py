@@ -4,7 +4,7 @@ from lalr.constants import EOF, START
 from lalr.exceptions import (
     ReduceReduceConflictError, ShiftReduceConflictError,
 )
-from lalr.grammar import InternalProduction
+from lalr.grammar import Production
 from lalr.utils import Queue
 
 
@@ -298,7 +298,7 @@ def _build_transition_table(grammar, target):
     grammar that accepts the given target.
     """
     starting_item = _Item(
-        InternalProduction(START, {target, }), cursor=0, follow_set={EOF},
+        Production(START, {target, }), cursor=0, follow_set={EOF},
     )
 
     # A list of item sets.  Item sets are identified by index.  We initialise

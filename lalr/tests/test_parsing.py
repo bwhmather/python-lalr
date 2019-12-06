@@ -2,7 +2,7 @@ import enum
 import unittest
 
 import lalr.exceptions
-from lalr import Grammar, InternalProduction, ParseTable, parse
+from lalr import Grammar, ParseTable, Production, parse
 
 
 def nop(production, *args):
@@ -13,11 +13,11 @@ class ParseTestCase(unittest.TestCase):
 
     def test_example(self):
         grammar = Grammar([
-            InternalProduction("N", ("V", "=", "E")),
-            InternalProduction("N", ("E",)),
-            InternalProduction("E", ("V",)),
-            InternalProduction("V", ("x",)),
-            InternalProduction("V", ("*", "E")),
+            Production("N", ("V", "=", "E")),
+            Production("N", ("E",)),
+            Production("E", ("V",)),
+            Production("V", ("x",)),
+            Production("V", ("*", "E")),
         ])
         parse_table = ParseTable(grammar, "N")
 
@@ -28,11 +28,11 @@ class ParseTestCase(unittest.TestCase):
 
     def test_bad_example(self):
         grammar = Grammar([
-            InternalProduction("N", ("V", "=", "E")),
-            InternalProduction("N", ("E",)),
-            InternalProduction("E", ("V",)),
-            InternalProduction("V", ("x",)),
-            InternalProduction("V", ("*", "E")),
+            Production("N", ("V", "=", "E")),
+            Production("N", ("E",)),
+            Production("E", ("V",)),
+            Production("V", ("x",)),
+            Production("V", ("*", "E")),
         ])
         parse_table = ParseTable(grammar, "N")
 
@@ -46,11 +46,11 @@ class ParseTestCase(unittest.TestCase):
             STAR = enum.auto()
 
         grammar = Grammar([
-            InternalProduction("N", ("V", Terminal.EQ, "E")),
-            InternalProduction("N", ("E",)),
-            InternalProduction("E", ("V",)),
-            InternalProduction("V", (Terminal.VAR,)),
-            InternalProduction("V", (Terminal.STAR, "E")),
+            Production("N", ("V", Terminal.EQ, "E")),
+            Production("N", ("E",)),
+            Production("E", ("V",)),
+            Production("V", (Terminal.VAR,)),
+            Production("V", (Terminal.STAR, "E")),
         ])
         parse_table = ParseTable(grammar, "N")
 
@@ -68,13 +68,13 @@ class ParseTestCase(unittest.TestCase):
             V = enum.auto()
 
         grammar = Grammar([
-            InternalProduction(
+            Production(
                 NonTerminal.N, (NonTerminal.V, "=", NonTerminal.E)
             ),
-            InternalProduction(NonTerminal.N, (NonTerminal.E,)),
-            InternalProduction(NonTerminal.E, (NonTerminal.V,)),
-            InternalProduction(NonTerminal.V, ("x",)),
-            InternalProduction(NonTerminal.V, ("*", NonTerminal.E)),
+            Production(NonTerminal.N, (NonTerminal.E,)),
+            Production(NonTerminal.E, (NonTerminal.V,)),
+            Production(NonTerminal.V, ("x",)),
+            Production(NonTerminal.V, ("*", NonTerminal.E)),
         ])
         parse_table = ParseTable(grammar, NonTerminal.N)
 

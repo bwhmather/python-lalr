@@ -3,7 +3,7 @@ from types import MappingProxyType
 from lalr.utils import Queue
 
 
-class InternalProduction(object):
+class Production(object):
 
     __slots__ = ('_name', '_symbols')
 
