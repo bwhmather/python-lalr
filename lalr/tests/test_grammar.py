@@ -3,6 +3,18 @@ import unittest
 from lalr.grammar import Grammar, Production
 
 
+class ProductionTestCase(unittest.TestCase):
+    def test_name_immutable(self):
+        production = Production("A", ("B",))
+        with self.assertRaises(AttributeError):
+            production.name = "a"
+
+    def test_symbols_immutable(self):
+        production = Production("A", ("B",))
+        with self.assertRaises(AttributeError):
+            production.symbols = ("b",)
+
+
 class TerminalsTestCase(unittest.TestCase):
     def test_loop(self):
         grammar = Grammar([

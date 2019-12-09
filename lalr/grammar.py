@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+import typing
 from types import MappingProxyType
 
 from lalr.utils import Queue
@@ -5,19 +8,21 @@ from lalr.utils import Queue
 
 class Production(object):
 
-    __slots__ = ('_name', '_symbols')
+    __slots__ = ('name', 'symbols')
+
+    name: str
+    symbols: typing.Tuple[str, ...]
 
     def __init__(self, name, symbols):
-        self._name = name
-        self._symbols = tuple(symbols)
+        if not isinstance(symbols, tuple):
+            raise TypeError("expected tuple, but got {cls}".format(
+                cls=type(symbols).__name__
+            ))
+        object.__setattr__(self, 'name', name)
+        object.__setattr__(self, 'symbols', symbols)
 
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def symbols(self):
-        return self._symbols
+    def __setattr__(self, attr, value):
+        raise AttributeError("can't set attributes on productions")
 
     def __len__(self):
         return len(self.symbols)
