@@ -55,80 +55,28 @@ class Grammar(object):
     def __init__(self, productions):
         self._productions = frozenset(productions)
 
-        # Force first_sets property to evaluate
-        self.first_sets
-
-        # There must be a first set for every symbol in the grammar
-        assert (
-            set(self.first_sets) ==
-            set.union(self.terminals, self.nonterminals)
-        )
-
-        # First sets should contain only terminals
-        assert not any(
-            set.difference(first_set, self.terminals)
-            for first_set in self.first_sets.values()
-        )
-
-        # There should be a first set for every terminal and non-terminal
-        assert self.symbols == set(self.first_sets.keys())
-
-    @property
-    def terminals(self):
-        """
-        The set of all symbols that appear on the right hand side of one or
-        more productions but have no production of their own.
-        """
-        return set.difference(self.symbols, self.nonterminals)
-
-    @property
-    def nonterminals(self):
-        """
-        The set of all symbols for which there are production rules.
-        """
-        return {production.name for production in self.productions()}
-
-    @property
-    def symbols(self):
-        """
-        The set of all symbols, both terminal and non-terminal.
-        """
         symbols = set()
-        for production in self.productions():
-            symbols.add(production.name)
-            symbols.update(production.symbols)
-        return symbols
-
-    def is_terminal(self, symbol):
-        return symbol in self.terminals
-
-    def is_nonterminal(self, symbol):
-        return symbol in self.nonterminals
-
-    def productions(self, name=None):
-        if name is None:
-            return set(self._productions)
-
-        return {
-            production for production in self._productions
-            if production.name == name
-        }
-
-    def _build_first_sets(self):
+        nonterminals = set()
         # A map from symbols to sets of symbols for which there exist
         # productions where the first symbol is the first element
         has_first_symbol = {}
-
-        for production in self.productions():
+        for production in self._productions:
+            symbols.add(production.name)
+            nonterminals.add(production.name)
+            symbols.update(production.symbols)
             has_first_symbol.setdefault(
                 production.symbols[0], set()
             ).add(production.name)
+
+        self._symbols = frozenset(symbols)
+        self._nonterminals = frozenset(nonterminals)
+        self._terminals = self._symbols - self._nonterminals
 
         # A map from symbols to the set of terminals which can appear as the
         # first terminal in a string that the symbol matches
         first_sets = {}
 
-        for terminal in self.terminals:
+        for terminal in self._terminals:
             # TODO if this is needed it should be folded into the inner loop.
             # kept separate for now so that it's very clear what is happening
             first_sets[terminal] = {terminal}
@@ -143,8 +91,65 @@ class Grammar(object):
                 first_sets.setdefault(nonterminal, set()).add(terminal)
 
                 queue.update(has_first_symbol.get(nonterminal, set()))
+        self._first_sets = MappingProxyType({
+            nonterminal: frozenset(terminals)
+            for nonterminal, terminals in first_sets.items()
+        })
 
-        return first_sets
+        # There must be a first set for every symbol in the grammar
+        assert (
+            frozenset(self._first_sets) ==
+            frozenset.union(self._terminals, self._nonterminals)
+        )
+
+        # First sets should contain only terminals
+        assert not any(
+            first_set - self._terminals
+            for first_set in self._first_sets.values()
+        )
+
+        # There should be a first set for every terminal and non-terminal
+        assert self._symbols == frozenset(self._first_sets.keys())
+
+    @property
+    def terminals(self):
+        """
+        The set of all symbols that appear on the right hand side of one or
+        more productions but have no production of their own.
+        """
+        return self._terminals
+
+    @property
+    def nonterminals(self):
+        """
+        The set of all symbols for which there are production rules.
+        """
+        return self._nonterminals
+
+    @property
+    def symbols(self):
+        """
+        The set of all symbols, both terminal and non-terminal.
+        """
+        return self._symbols
+
+    def is_terminal(self, symbol):
+        return symbol in self._terminals
+
+    def is_nonterminal(self, symbol):
+        return symbol in self._nonterminals
+
+    def is_symbol(self, symbol):
+        return symbol in self._symbols
+
+    def productions(self, name=None):
+        if name is None:
+            return self._productions
+
+        return frozenset(
+            production for production in self._productions
+            if production.name == name
+        )
 
     @property
     def first_sets(self):
@@ -153,7 +158,4 @@ class Grammar(object):
         terminal in that symbol.  Terminal symbols are included and just map to
         a set containing only themselves
         """
-        if not hasattr(self, '_first_sets'):
-            self._first_sets = MappingProxyType(self._build_first_sets())
-
         return self._first_sets
