@@ -4,6 +4,7 @@ from lalr.grammar import Grammar, Production
 
 
 class ProductionTestCase(unittest.TestCase):
+
     def test_name_immutable(self):
         production = Production("A", ("B",))
         with self.assertRaises(AttributeError):
@@ -16,13 +17,14 @@ class ProductionTestCase(unittest.TestCase):
 
 
 class TerminalsTestCase(unittest.TestCase):
+
     def test_loop(self):
         grammar = Grammar([
             Production("A", ("B",)),
             Production("A", ("x",)),
             Production("B", ("A",)),
         ], )
-        self.assertEqual(grammar.terminals, {"x"})
+        self.assertEqual(grammar.terminals(), {"x"})
 
     def test_example(self):
         grammar = Grammar([
@@ -32,10 +34,11 @@ class TerminalsTestCase(unittest.TestCase):
             Production("V", ("x",)),
             Production("V", ("*", "E")),
         ])
-        self.assertEqual(grammar.terminals, {"x", "=", "*"})
+        self.assertEqual(grammar.terminals(), {"x", "=", "*"})
 
 
 class FirstSetsTestCase(unittest.TestCase):
+
     def test_loop(self):
         grammar = Grammar([
             Production("A", ("B",)),
@@ -43,11 +46,9 @@ class FirstSetsTestCase(unittest.TestCase):
             Production("B", ("A",)),
         ])
 
-        self.assertEqual(grammar.first_sets, {
-            "x": {"x"},
-            "A": {"x"},
-            "B": {"x"},
-        })
+        self.assertEqual(grammar.first_set("x"), {"x"})
+        self.assertEqual(grammar.first_set("A"), {"x"})
+        self.assertEqual(grammar.first_set("B"), {"x"})
 
     def test_example(self):
         grammar = Grammar([
@@ -58,11 +59,9 @@ class FirstSetsTestCase(unittest.TestCase):
             Production("V", ("*", "E")),
         ])
 
-        self.assertEqual(grammar.first_sets, {
-            "x": {"x"},
-            "=": {"="},
-            "*": {"*"},
-            "N": {"*", "x"},
-            "E": {"*", "x"},
-            "V": {"*", "x"},
-        })
+        self.assertEqual(grammar.first_set("x"), {"x"})
+        self.assertEqual(grammar.first_set("="), {"="})
+        self.assertEqual(grammar.first_set("*"), {"*"})
+        self.assertEqual(grammar.first_set("N"), {"*", "x"})
+        self.assertEqual(grammar.first_set("E"), {"*", "x"})
+        self.assertEqual(grammar.first_set("V"), {"*", "x"})

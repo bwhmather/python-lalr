@@ -111,7 +111,6 @@ class Grammar(object):
         # There should be a first set for every terminal and non-terminal
         assert self._symbols == frozenset(self._first_sets.keys())
 
-    @property
     def terminals(self):
         """
         The set of all symbols that appear on the right hand side of one or
@@ -119,14 +118,12 @@ class Grammar(object):
         """
         return self._terminals
 
-    @property
     def nonterminals(self):
         """
         The set of all symbols for which there are production rules.
         """
         return self._nonterminals
 
-    @property
     def symbols(self):
         """
         The set of all symbols, both terminal and non-terminal.
@@ -151,11 +148,10 @@ class Grammar(object):
             if production.name == name
         )
 
-    @property
-    def first_sets(self):
+    def first_set(self, symbol):
         """
-        A map from symbols to sets of terminals that can appear as the first
-        terminal in that symbol.  Terminal symbols are included and just map to
-        a set containing only themselves
+        Returns the set of terminals that can appear as the first terminal in
+        a symbol.  If passed a terminal symbol will just return a one item
+        set containing the terminal itself.
         """
-        return self._first_sets
+        return self._first_sets[symbol]

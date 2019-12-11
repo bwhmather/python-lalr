@@ -168,7 +168,7 @@ def _build_derived_items(grammar, kernel):
         follow_set = follow_sets.setdefault(symbol, set())
 
         if rest:
-            follow_set.update(grammar.first_sets[rest[0]])
+            follow_set.update(grammar.first_set(rest[0]))
         else:
             follow_set.update(item.follow_set)
 
@@ -199,7 +199,7 @@ def _build_derived_items(grammar, kernel):
             # As cycles are possible we need to make sure that we update the
             # follow sets of non-terminals that we have already expanded
             if rest:
-                new_items = grammar.first_sets[rest[0]]
+                new_items = grammar.first_set(rest[0])
             else:
                 new_items = follow_sets.get(production.name, set())
 
