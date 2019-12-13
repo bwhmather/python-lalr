@@ -101,7 +101,11 @@ class _Item(object):
         )
 
     def __repr__(self):
-        return '[' + str(self) + ']'
+        return '_Item({production!r}, {cursor!r}, {follow_set!r})'.format(
+            production=self.production,
+            cursor=self.cursor,
+            follow_set=self.follow_set,
+        )
 
 
 class _ItemSet(object):

@@ -35,7 +35,9 @@ class Production(object):
         )
 
     def __repr__(self):
-        return "[" + str(self) + "]"
+        return "Production({name}, {symbols})".format(
+            name=self.name, symbols=self.symbols,
+        )
 
     def __eq__(self, other):
         return (
