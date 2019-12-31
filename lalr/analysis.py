@@ -245,29 +245,20 @@ def _build_derived_items(grammar, kernel):
     }
 
 
-def _merge_items(a, b):
-    if a.production != b.production or a.cursor != b.cursor:
-        raise Exception('Item cores do not match')
-
-    return _Item(
-        a.production, a._cursor, set.union(a.follow_set, b.follow_set),
-    )
-
-
 def _merge_kernels(kernel_a, kernel_b):
-    items_by_core_a = {
-        (item.matched, item.expected): item for item in kernel_a
-    }
-    items_by_core_b = {
-        (item.matched, item.expected): item for item in kernel_b
+    kernel_a_lookup = {
+        (item.production, item.cursor): item for item in kernel_a
     }
 
-    assert set(items_by_core_a) == set(items_by_core_b)
+    kernel = []
+    for item_b in kernel_b:
+        item_a = kernel_a_lookup[(item_b.production, item_b.cursor)]
+        kernel.append(_Item(
+            item_a.production, item_a._cursor,
+            set.union(item_a.follow_set, item_b.follow_set),
+        ))
 
-    return {
-        _merge_items(items_by_core_a[core], items_by_core_b[core])
-        for core in items_by_core_a
-    }
+    return frozenset(kernel)
 
 
 def _build_item_set(grammar, kernel):
