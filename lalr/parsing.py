@@ -109,7 +109,15 @@ def parse(
             )
 
         else:
-            raise ParseError(lookahead_token)
+            valid_shifts = set(parse_table.shifts(_top()))
+            valid_reductions = set(parse_table.reductions(_top()))
+
+            raise ParseError(
+                "unexpected token",
+                lookahead_token=lookahead_token,
+                valid_shifts=valid_shifts,
+                valid_reductions=valid_reductions
+            )
 
     assert len(result_stack) == 1
     return result_stack[0]

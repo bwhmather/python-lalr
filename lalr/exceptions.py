@@ -19,4 +19,10 @@ class ReduceReduceConflictError(ConflictError):
 
 
 class ParseError(Exception):
-    pass
+    def __init__(
+        self, message, *, lookahead_token, valid_shifts, valid_reductions
+    ):
+        super(ParseError, self).__init__(message)
+        self.lookahead_token = lookahead_token
+        self.valid_shifts = valid_shifts
+        self.valid_reductions = valid_reductions
