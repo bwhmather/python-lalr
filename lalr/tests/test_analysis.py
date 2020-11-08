@@ -1,6 +1,9 @@
 import unittest
 
-from lalr.analysis import _build_item_set, _build_transition_table, _Item
+from lalr.analysis import (
+    ParseTable, _build_item_set, _build_transition_table, _Item,
+)
+from lalr.exceptions import ReduceReduceConflictError
 from lalr.grammar import Grammar, Production
 
 
@@ -52,3 +55,16 @@ class _ItemSetTestCase(unittest.TestCase):
             print()
 
             print(transitions[num])
+
+    def test_lalr_reduce_reduce(self):
+        grammar = Grammar([
+            Production("S", ("a", "E", "c")),
+            Production("S", ("a", "F", "d")),
+            Production("S", ("b", "F", "c")),
+            Production("S", ("b", "E", "d")),
+            Production("E", ("e",)),
+            Production("F", ("e",)),
+        ])
+
+        with self.assertRaises(ReduceReduceConflictError):
+            ParseTable(grammar, "S")
