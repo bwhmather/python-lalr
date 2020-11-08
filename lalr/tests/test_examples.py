@@ -14,9 +14,9 @@ class LispTestCase(unittest.TestCase):
         Production("list", ("lparen", "list_body", "rparen")),
 
         Production("list_body", ("expression",)),
-        Production("list_body", ("expression", "list_body")),
+        Production("list_body", ("list_body", "expression")),
 
-        Production("expression", ("list",),),
+        Production("expression", ("list",)),
         Production("expression", ("string",)),
         Production("expression", ("number",)),
         Production("expression", ("symbol",)),
