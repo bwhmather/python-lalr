@@ -284,7 +284,7 @@ def _item_set_transitions(grammar, item_set):
 
 
 def _kernel_core(kernel):
-    return frozenset((item.matched, item.expected) for item in kernel)
+    return frozenset((item.production, item.cursor) for item in kernel)
 
 
 def _build_transition_table(grammar, target):
