@@ -2,6 +2,13 @@ from lalr.constants import EOF
 from lalr.exceptions import ParseError
 
 
+def _or_list(values):
+    if len(values) > 1:
+        return ", ".join(values[:-1]) + ' or ' + values[-1]
+    else:
+        return values[0]
+
+
 def _default_token_symbol(token):
     return token
 
@@ -141,8 +148,16 @@ def parse(
                         continue
                     expected_symbols.add(item.expected[0])
 
+            if expected_symbols:
+                message = (
+                    f"expected {_or_list(sorted(expected_symbols))} "
+                    f"before {lookahead_symbol if lookahead_symbol is not EOF else 'EOF'}"
+                )
+            else:
+                message = f"expected EOF instead of {lookahead_symbol}"
+
             raise ParseError(
-                "unexpected token",
+                message,
                 lookahead_token=lookahead_token,
                 expected_symbols=expected_symbols,
             )

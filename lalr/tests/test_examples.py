@@ -45,5 +45,15 @@ class LispTestCase(unittest.TestCase):
             parse(self.parse_table, ["lparen", "string"], action=nop)
 
         exc = exc_context.exception
+        self.assertEqual(str(exc), "expected expression or rparen before EOF")
         self.assertEqual(exc.lookahead_token, None)
         self.assertEqual(exc.expected_symbols, {"expression", "rparen"})
+
+    def test_extra_closing_paren(self):
+        with self.assertRaises(ParseError) as exc_context:
+            parse(self.parse_table, ["lparen", "rparen", "rparen"], action=nop)
+
+        exc = exc_context.exception
+        self.assertEqual(str(exc), "expected EOF instead of rparen")
+        self.assertEqual(exc.lookahead_token, "rparen")
+        self.assertEqual(exc.expected_symbols, set())
