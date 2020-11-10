@@ -24,8 +24,21 @@ class LispTestCase(unittest.TestCase):
 
     parse_table = ParseTable(grammar, "expression")
 
-    def test_single_element_list(self):
-        parse(self.parse_table, ["lparen", "string", "rparen"], action=nop)
+    def test_two_element_list(self):
+        reductions = []
+        def _record(production, *args):
+            reductions.append(production)
+
+        parse(self.parse_table, ["lparen", "string", "string", "rparen"], action=_record)
+
+        self.assertEqual(reductions, [
+            Production("expression", ("string",)),
+            Production("list_body", ("expression",)),
+            Production("expression", ("string",)),
+            Production("list_body", ("list_body", "expression")),
+            Production("list", ("lparen", "list_body", "rparen")),
+            Production("expression", ("list",)),
+        ])
 
     def test_missing_closing_paren(self):
         with self.assertRaises(ParseError) as exc_context:
