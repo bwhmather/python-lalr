@@ -20,9 +20,8 @@ class ReduceReduceConflictError(ConflictError):
 
 class ParseError(Exception):
     def __init__(
-        self, message, *, lookahead_token, valid_shifts, valid_reductions
+        self, message, *, lookahead_token, expected_symbols
     ):
         super(ParseError, self).__init__(message)
         self.lookahead_token = lookahead_token
-        self.valid_shifts = valid_shifts
-        self.valid_reductions = valid_reductions
+        self.expected_symbols = expected_symbols

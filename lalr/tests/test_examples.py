@@ -33,8 +33,4 @@ class LispTestCase(unittest.TestCase):
 
         exc = exc_context.exception
         self.assertEqual(exc.lookahead_token, None)
-
-        self.assertEqual(
-            exc.valid_shifts, {"lparen", "symbol", "number", "string"}
-        )
-        self.assertEqual(exc.valid_reductions, {"rparen"})
+        self.assertEqual(exc.expected_symbols, {"expression", "rparen"})

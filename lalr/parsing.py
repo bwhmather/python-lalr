@@ -109,14 +109,42 @@ def parse(
             )
 
         else:
-            valid_shifts = set(parse_table.shifts(_top()))
-            valid_reductions = set(parse_table.reductions(_top()))
+            expected_tokens = {
+                *parse_table.shifts(_top()),
+                *parse_table.reductions(_top()),
+            }
+            expected_symbols = set()
+
+            for token in expected_tokens:
+                state_stack_ = list(state_stack)
+
+                # Apply as many reductions as possible with the candidate
+                # lookahead token.
+                while True:
+                    if token not in parse_table.reductions(state_stack_[-1]):
+                        break
+
+                    if token == EOF:
+                        break
+
+                    production = parse_table.reductions(state_stack_[-1])[token]
+
+                    del state_stack_[-len(production):]
+                    state_stack_.append(
+                        parse_table.gotos(state_stack_[-1])[production.name]
+                    )
+
+                # Find all symbols that can follow it at the same level of
+                # abstraction.
+                for item in parse_table.item_set(state_stack_[-1]).kernel:
+                    if not item.expected:
+                        continue
+                    expected_symbols.add(item.expected[0])
 
             raise ParseError(
                 "unexpected token",
                 lookahead_token=lookahead_token,
-                valid_shifts=valid_shifts,
-                valid_reductions=valid_reductions
+                expected_symbols=expected_symbols,
             )
 
     assert len(result_stack) == 1
