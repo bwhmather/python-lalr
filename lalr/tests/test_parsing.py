@@ -36,8 +36,12 @@ class ParseTestCase(unittest.TestCase):
         ])
         parse_table = ParseTable(grammar, "N")
 
-        with self.assertRaises(lalr.exceptions.ParseError):
+        with self.assertRaises(lalr.exceptions.ParseError) as exc_context:
             parse(parse_table, ["x", "*", "x"], action=nop)
+
+        exc = exc_context.exception
+        self.assertEqual(exc.lookahead_token, "*")
+        self.assertEqual(exc.expected_symbols, {"="})
 
     def test_enum_terminals(self):
         class Terminal(enum.Enum):
