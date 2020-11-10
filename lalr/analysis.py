@@ -478,6 +478,11 @@ class ParseTable(object):
     def start_state(self):
         return _State(self, 0)
 
+    def item_set(self, state):
+        # TODO needed for error reporting, but is something of an abstraction
+        # leak.  Find a better alternative.
+        return self._item_sets[state._index]
+
     def reductions(self, state):
         """
         Returns a dictionary mapping from terminal symbols to reduce actions.
