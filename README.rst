@@ -1,14 +1,12 @@
 Python LALR
 ===========
 
-|build-status| |coverage|
+|build-status|
+
+.. |build-status| image:: https://github.com/bwhmather/python-lalr/actions/workflows/ci.yaml/badge.svg?branch=master
+    :target: https://github.com/bwhmather/python-lalr/actions/workflows/ci.yaml
+    :alt: Build Status
 
 A pure python LALR parser generator
 
-.. |build-status| image:: https://travis-ci.org/bwhmather/python-lalr.png?branch=develop
-    :target: https://travis-ci.org/bwhmather/python-lalr
-    :alt: Build Status
-.. |coverage| image:: https://coveralls.io/repos/bwhmather/python-lalr/badge.png?branch=develop
-    :target: https://coveralls.io/r/bwhmather/python-lalr?branch=develop
-    :alt: Coverage
 .. _LICENSE: ./LICENSE
