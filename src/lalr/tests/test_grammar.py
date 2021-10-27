@@ -1,72 +1,72 @@
-import unittest
+import pytest
 
 from lalr.grammar import Grammar, Production
 
 
-class ProductionTestCase(unittest.TestCase):
-    def test_name_immutable(self):
-        production = Production("A", ("B",))
-        with self.assertRaises(AttributeError):
-            production.name = "a"
-
-    def test_symbols_immutable(self):
-        production = Production("A", ("B",))
-        with self.assertRaises(AttributeError):
-            production.symbols = ("b",)
+def test_production_name_immutable():
+    production = Production("A", ("B",))
+    with pytest.raises(AttributeError):
+        production.name = "a"
 
 
-class TerminalsTestCase(unittest.TestCase):
-    def test_loop(self):
-        grammar = Grammar(
-            [
-                Production("A", ("B",)),
-                Production("A", ("x",)),
-                Production("B", ("A",)),
-            ],
-        )
-        self.assertEqual(grammar.terminals(), {"x"})
-
-    def test_example(self):
-        grammar = Grammar(
-            [
-                Production("N", ("V", "=", "E")),
-                Production("N", ("E",)),
-                Production("E", ("V",)),
-                Production("V", ("x",)),
-                Production("V", ("*", "E")),
-            ]
-        )
-        self.assertEqual(grammar.terminals(), {"x", "=", "*"})
+def test_production_symbols_immutable():
+    production = Production("A", ("B",))
+    with pytest.raises(AttributeError):
+        production.symbols = ("b",)
 
 
-class FirstSetsTestCase(unittest.TestCase):
-    def test_loop(self):
-        grammar = Grammar(
-            [
-                Production("A", ("B",)),
-                Production("A", ("x",)),
-                Production("B", ("A",)),
-            ]
-        )
+def test_terminals_loop():
+    grammar = Grammar(
+        [
+            Production("A", ("B",)),
+            Production("A", ("x",)),
+            Production("B", ("A",)),
+        ],
+    )
+    assert grammar.terminals() == {"x"}
 
-        self.assertEqual(grammar.first_set("x"), {"x"})
-        self.assertEqual(grammar.first_set("A"), {"x"})
-        self.assertEqual(grammar.first_set("B"), {"x"})
 
-    def test_example(self):
-        grammar = Grammar(
-            [
-                Production("N", ("V", "=", "E")),
-                Production("N", ("E",)),
-                Production("E", ("V",)),
-                Production("V", ("x",)),
-                Production("V", ("*", "E")),
-            ]
-        )
+def test_terminals_example():
+    grammar = Grammar(
+        [
+            Production("N", ("V", "=", "E")),
+            Production("N", ("E",)),
+            Production("E", ("V",)),
+            Production("V", ("x",)),
+            Production("V", ("*", "E")),
+        ]
+    )
+    assert grammar.terminals() == {"x", "=", "*"}
 
-        self.assertEqual(grammar.first_set("x"), {"x"})
-        self.assertEqual(grammar.first_set("="), {"="})
-        self.assertEqual(grammar.first_set("*"), {"*"})
-        self.assertEqual(grammar.first_set("N"), {"*", "x"})
-        self.assertEqual(grammar.first_set("E"), {"*", "x"})
-        self.assertEqual(grammar.first_set("V"), {"*", "x"})
+
+def test_first_set_loop():
+    grammar = Grammar(
+        [
+            Production("A", ("B",)),
+            Production("A", ("x",)),
+            Production("B", ("A",)),
+        ]
+    )
+
+    assert grammar.first_set("x") == {"x"}
+    assert grammar.first_set("A") == {"x"}
+    assert grammar.first_set("B") == {"x"}
+
+
+def test_first_set_example():
+    grammar = Grammar(
+        [
+            Production("N", ("V", "=", "E")),
+            Production("N", ("E",)),
+            Production("E", ("V",)),
+            Production("V", ("x",)),
+            Production("V", ("*", "E")),
+        ]
+    )
+
+    assert grammar.first_set("x") == {"x"}
+    assert grammar.first_set("=") == {"="}
+    assert grammar.first_set("*") == {"*"}
+    assert grammar.first_set("N") == {"*", "x"}
+    assert grammar.first_set("E") == {"*", "x"}
+    assert grammar.first_set("V") == {"*", "x"}
