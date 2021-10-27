@@ -3,11 +3,11 @@ global-exclude *
 
 # Include python files.
 include setup.py
-recursive-include lalr *.py
+recursive-include src *.py
 
 # Include type annotation stub files.
-include lalr/py.typed
-recursive-include lalr *.pyi
+include src/lalr/py.typed
+recursive-include src *.pyi
 
 # Include coniguration files.
 include setup.cfg
