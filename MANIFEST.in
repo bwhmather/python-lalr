@@ -11,6 +11,7 @@ recursive-include src *.pyi
 
 # Include coniguration files.
 include setup.cfg
+include pyproject.toml
 
 # Include documentation.
 include README.rst LICENSE
