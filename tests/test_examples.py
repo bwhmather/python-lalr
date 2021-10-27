@@ -1,5 +1,3 @@
-import unittest
-
 import pytest
 
 from lalr import Grammar, ParseTable, Production, parse
