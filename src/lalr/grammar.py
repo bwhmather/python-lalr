@@ -6,18 +6,20 @@ from lalr.utils import Queue
 
 class Production(object):
 
-    __slots__ = ('name', 'symbols')
+    __slots__ = ("name", "symbols")
 
     name: str
     symbols: typing.Tuple[str, ...]
 
     def __init__(self, name, symbols):
         if not isinstance(symbols, tuple):
-            raise TypeError("expected tuple, but got {cls}".format(
-                cls=type(symbols).__name__
-            ))
-        object.__setattr__(self, 'name', name)
-        object.__setattr__(self, 'symbols', symbols)
+            raise TypeError(
+                "expected tuple, but got {cls}".format(
+                    cls=type(symbols).__name__
+                )
+            )
+        object.__setattr__(self, "name", name)
+        object.__setattr__(self, "symbols", symbols)
 
     def __setattr__(self, attr, value):
         raise AttributeError("can't set attributes on productions")
@@ -31,29 +33,23 @@ class Production(object):
     def __str__(self):
         return "{name} -> {symbols}".format(
             name=self.name,
-            symbols=' '.join(str(symbol) for symbol in self.symbols),
+            symbols=" ".join(str(symbol) for symbol in self.symbols),
         )
 
     def __repr__(self):
         return "Production({name}, {symbols})".format(
-            name=self.name, symbols=self.symbols,
+            name=self.name,
+            symbols=self.symbols,
         )
 
     def __eq__(self, other):
-        return (
-            self.name == other.name and
-            self.symbols == other.symbols
-        )
+        return self.name == other.name and self.symbols == other.symbols
 
     def __hash__(self):
-        return (
-            hash(self.name) ^
-            hash(self.symbols)
-        )
+        return hash(self.name) ^ hash(self.symbols)
 
 
 class Grammar(object):
-
     def __init__(self, productions):
         self._productions = frozenset(productions)
 
@@ -66,9 +62,9 @@ class Grammar(object):
             symbols.add(production.name)
             nonterminals.add(production.name)
             symbols.update(production.symbols)
-            has_first_symbol.setdefault(
-                production.symbols[0], set()
-            ).add(production.name)
+            has_first_symbol.setdefault(production.symbols[0], set()).add(
+                production.name
+            )
 
         self._symbols = frozenset(symbols)
         self._nonterminals = frozenset(nonterminals)
@@ -93,15 +89,16 @@ class Grammar(object):
                 first_sets.setdefault(nonterminal, set()).add(terminal)
 
                 queue.update(has_first_symbol.get(nonterminal, set()))
-        self._first_sets = MappingProxyType({
-            nonterminal: frozenset(terminals)
-            for nonterminal, terminals in first_sets.items()
-        })
+        self._first_sets = MappingProxyType(
+            {
+                nonterminal: frozenset(terminals)
+                for nonterminal, terminals in first_sets.items()
+            }
+        )
 
         # There must be a first set for every symbol in the grammar
-        assert (
-            frozenset(self._first_sets) ==
-            frozenset.union(self._terminals, self._nonterminals)
+        assert frozenset(self._first_sets) == frozenset.union(
+            self._terminals, self._nonterminals
         )
 
         # First sets should contain only terminals
@@ -146,7 +143,8 @@ class Grammar(object):
             return self._productions
 
         return frozenset(
-            production for production in self._productions
+            production
+            for production in self._productions
             if production.name == name
         )
 

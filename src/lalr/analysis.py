@@ -1,9 +1,7 @@
 from types import MappingProxyType
 
 from lalr.constants import EOF, START
-from lalr.exceptions import (
-    ReduceReduceConflictError, ShiftReduceConflictError,
-)
+from lalr.exceptions import ReduceReduceConflictError, ShiftReduceConflictError
 from lalr.grammar import Production
 from lalr.utils import Queue
 
@@ -16,7 +14,7 @@ class _Item(object):
     location within a production given what has come before.
     """
 
-    __slots__ = ('_production', '_cursor', '_follow_set')
+    __slots__ = ("_production", "_cursor", "_follow_set")
 
     def __init__(self, production, cursor, follow_set):
         assert cursor <= len(production)
@@ -28,9 +26,7 @@ class _Item(object):
 
     def __hash__(self):
         return (
-            hash(self.production) ^
-            hash(self._cursor) ^
-            hash(self._follow_set)
+            hash(self.production) ^ hash(self._cursor) ^ hash(self._follow_set)
         )
 
     def __eq__(self, other):
@@ -38,9 +34,9 @@ class _Item(object):
             return NotImplemented
 
         return (
-            self.production == other.production and
-            self._cursor == other._cursor and
-            self._follow_set == other.follow_set
+            self.production == other.production
+            and self._cursor == other._cursor
+            and self._follow_set == other.follow_set
         )
 
     @property
@@ -74,7 +70,7 @@ class _Item(object):
         A tuple of the symbols in the item's production that have already been
         found by the parser.
         """
-        return tuple(self.production[:self._cursor])
+        return tuple(self.production[: self._cursor])
 
     @property
     def expected(self):
@@ -82,7 +78,7 @@ class _Item(object):
         A tuple of the symbols in the item's production that will need to be
         found for the whole production to be matched.
         """
-        return tuple(self.production[self._cursor:])
+        return tuple(self.production[self._cursor :])
 
     @property
     def follow_set(self):
@@ -95,13 +91,13 @@ class _Item(object):
     def __str__(self):
         return "{name} -> {matched} * {expected}, {follow_set}".format(
             name=self.name,
-            matched=' '.join(str(symbol) for symbol in self.matched),
-            expected=' '.join(str(symbol) for symbol in self.expected),
-            follow_set='/'.join(str(symbol) for symbol in self.follow_set),
+            matched=" ".join(str(symbol) for symbol in self.matched),
+            expected=" ".join(str(symbol) for symbol in self.expected),
+            follow_set="/".join(str(symbol) for symbol in self.follow_set),
         )
 
     def __repr__(self):
-        return '_Item({production!r}, {cursor!r}, {follow_set!r})'.format(
+        return "_Item({production!r}, {cursor!r}, {follow_set!r})".format(
             production=self.production,
             cursor=self.cursor,
             follow_set=self.follow_set,
@@ -209,9 +205,9 @@ def _build_derived_items(grammar, kernel):
 
                 # Make sure that the first symbol gets updated when new items
                 # are added to the follow set of the current symbol
-                immediate_dependants.setdefault(
-                    production.name, set()
-                ).add(first)
+                immediate_dependants.setdefault(production.name, set()).add(
+                    first
+                )
 
             follow_sets.setdefault(first, set()).update(new_items)
 
@@ -253,10 +249,13 @@ def _merge_kernels(kernel_a, kernel_b):
     kernel = []
     for item_b in kernel_b:
         item_a = kernel_a_lookup[(item_b.production, item_b.cursor)]
-        kernel.append(_Item(
-            item_a.production, item_a._cursor,
-            set.union(item_a.follow_set, item_b.follow_set),
-        ))
+        kernel.append(
+            _Item(
+                item_a.production,
+                item_a._cursor,
+                set.union(item_a.follow_set, item_b.follow_set),
+            )
+        )
 
     return frozenset(kernel)
 
@@ -277,10 +276,7 @@ def _item_set_transitions(grammar, item_set):
         kernel = kernels.setdefault(symbol, set())
         kernel.add(_Item(item.production, item.cursor + 1, item.follow_set))
 
-    return {
-        symbol: frozenset(kernel)
-        for symbol, kernel in kernels.items()
-    }
+    return {symbol: frozenset(kernel) for symbol, kernel in kernels.items()}
 
 
 def _kernel_core(kernel):
@@ -293,7 +289,9 @@ def _build_transition_table(grammar, target):
     grammar that accepts the given target.
     """
     starting_item = _Item(
-        Production(START, (target,)), cursor=0, follow_set={EOF},
+        Production(START, (target,)),
+        cursor=0,
+        follow_set={EOF},
     )
 
     # A list of item sets.  Item sets are identified by index.  We initialise
@@ -304,9 +302,7 @@ def _build_transition_table(grammar, target):
     # dictionaries mapping from symbols to item set indexes
     transitions = []
 
-    kernel_queue = Queue([
-        frozenset({starting_item})
-    ])
+    kernel_queue = Queue([frozenset({starting_item})])
 
     # A map from kernel cores, frozen sets of tuples of matched and expected
     # strings without a follow set, to item set indexes.  This is used to do
@@ -358,11 +354,13 @@ def _build_shift_table(grammar, item_sets, item_set_transitions):
     """
     shifts = []
     for transitions in item_set_transitions:
-        shifts.append({
-            symbol: state
-            for symbol, state in transitions.items()
-            if grammar.is_terminal(symbol)
-        })
+        shifts.append(
+            {
+                symbol: state
+                for symbol, state in transitions.items()
+                if grammar.is_terminal(symbol)
+            }
+        )
     return shifts
 
 
@@ -375,11 +373,13 @@ def _build_goto_table(grammar, item_sets, item_set_transitions):
     """
     gotos = []
     for transitions in item_set_transitions:
-        gotos.append({
-            symbol: state
-            for symbol, state in transitions.items()
-            if grammar.is_nonterminal(symbol)
-        })
+        gotos.append(
+            {
+                symbol: state
+                for symbol, state in transitions.items()
+                if grammar.is_nonterminal(symbol)
+            }
+        )
     return gotos
 
 
@@ -409,10 +409,7 @@ def _build_reduction_table(grammar, item_sets, item_set_transitions):
 
 def _build_accept_table(grammar, item_sets, items_set_transitions):
     return [
-        any(
-            item.name == START and not item.expected
-            for item in item_set
-        )
+        any(item.name == START and not item.expected for item in item_set)
         for item_set in item_sets
     ]
 
@@ -430,7 +427,8 @@ class _State(object):
     """
     An opaque reference type pointing to a state in a parse table.
     """
-    __slots__ = {'_table', '_index'}
+
+    __slots__ = {"_table", "_index"}
 
     def __init__(self, table, index):
         self._table = table
@@ -444,8 +442,8 @@ class _State(object):
             return NotImplemented
 
         return (
-            self._table._item_sets[self._index] ==
-            other._table._item_sets[self._index]
+            self._table._item_sets[self._index]
+            == other._table._item_sets[self._index]
         )
 
 
@@ -455,16 +453,24 @@ class ParseTable(object):
         self._item_sets, self._transitions = item_sets, transitions
 
         self._reductions = _build_reduction_table(
-            grammar, item_sets, transitions,
+            grammar,
+            item_sets,
+            transitions,
         )
         self._shifts = _build_shift_table(
-            grammar, item_sets, transitions,
+            grammar,
+            item_sets,
+            transitions,
         )
         self._gotos = _build_goto_table(
-            grammar, item_sets, transitions,
+            grammar,
+            item_sets,
+            transitions,
         )
         self._accepts = _build_accept_table(
-            grammar, item_sets, transitions,
+            grammar,
+            item_sets,
+            transitions,
         )
 
         _check_shift_reduce_conflicts(self._shifts, self._reductions)
@@ -498,20 +504,24 @@ class ParseTable(object):
 
         A shift action is simply an identifier for another state.
         """
-        return MappingProxyType({
-            terminal: _State(self, index)
-            for terminal, index in self._shifts[state._index].items()
-        })
+        return MappingProxyType(
+            {
+                terminal: _State(self, index)
+                for terminal, index in self._shifts[state._index].items()
+            }
+        )
 
     def gotos(self, state):
         """
         Returns a dictionary mapping from non terminal symbols to shift
         actions.
         """
-        return MappingProxyType({
-            nonterminal: _State(self, index)
-            for nonterminal, index in self._gotos[state._index].items()
-        })
+        return MappingProxyType(
+            {
+                nonterminal: _State(self, index)
+                for nonterminal, index in self._gotos[state._index].items()
+            }
+        )
 
     def accepts(self, state):
         """

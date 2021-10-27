@@ -19,9 +19,7 @@ class ReduceReduceConflictError(ConflictError):
 
 
 class ParseError(Exception):
-    def __init__(
-        self, message, *, lookahead_token, expected_symbols
-    ):
+    def __init__(self, message, *, lookahead_token, expected_symbols):
         super(ParseError, self).__init__(message)
         self.lookahead_token = lookahead_token
         self.expected_symbols = expected_symbols

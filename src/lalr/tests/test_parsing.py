@@ -10,15 +10,16 @@ def nop(production, *args):
 
 
 class ParseTestCase(unittest.TestCase):
-
     def test_example(self):
-        grammar = Grammar([
-            Production("N", ("V", "=", "E")),
-            Production("N", ("E",)),
-            Production("E", ("V",)),
-            Production("V", ("x",)),
-            Production("V", ("*", "E")),
-        ])
+        grammar = Grammar(
+            [
+                Production("N", ("V", "=", "E")),
+                Production("N", ("E",)),
+                Production("E", ("V",)),
+                Production("V", ("x",)),
+                Production("V", ("*", "E")),
+            ]
+        )
         parse_table = ParseTable(grammar, "N")
 
         self.assertEqual(
@@ -27,13 +28,15 @@ class ParseTestCase(unittest.TestCase):
         )
 
     def test_bad_example(self):
-        grammar = Grammar([
-            Production("N", ("V", "=", "E")),
-            Production("N", ("E",)),
-            Production("E", ("V",)),
-            Production("V", ("x",)),
-            Production("V", ("*", "E")),
-        ])
+        grammar = Grammar(
+            [
+                Production("N", ("V", "=", "E")),
+                Production("N", ("E",)),
+                Production("E", ("V",)),
+                Production("V", ("x",)),
+                Production("V", ("*", "E")),
+            ]
+        )
         parse_table = ParseTable(grammar, "N")
 
         with self.assertRaises(lalr.exceptions.ParseError) as exc_context:
@@ -49,19 +52,28 @@ class ParseTestCase(unittest.TestCase):
             EQ = enum.auto()
             STAR = enum.auto()
 
-        grammar = Grammar([
-            Production("N", ("V", Terminal.EQ, "E")),
-            Production("N", ("E",)),
-            Production("E", ("V",)),
-            Production("V", (Terminal.VAR,)),
-            Production("V", (Terminal.STAR, "E")),
-        ])
+        grammar = Grammar(
+            [
+                Production("N", ("V", Terminal.EQ, "E")),
+                Production("N", ("E",)),
+                Production("E", ("V",)),
+                Production("V", (Terminal.VAR,)),
+                Production("V", (Terminal.STAR, "E")),
+            ]
+        )
         parse_table = ParseTable(grammar, "N")
 
         self.assertEqual(
-            parse(parse_table, [
-                Terminal.VAR, Terminal.EQ, Terminal.STAR, Terminal.VAR,
-            ], action=nop),
+            parse(
+                parse_table,
+                [
+                    Terminal.VAR,
+                    Terminal.EQ,
+                    Terminal.STAR,
+                    Terminal.VAR,
+                ],
+                action=nop,
+            ),
             "N",
         )
 
@@ -71,15 +83,15 @@ class ParseTestCase(unittest.TestCase):
             E = enum.auto()
             V = enum.auto()
 
-        grammar = Grammar([
-            Production(
-                NonTerminal.N, (NonTerminal.V, "=", NonTerminal.E)
-            ),
-            Production(NonTerminal.N, (NonTerminal.E,)),
-            Production(NonTerminal.E, (NonTerminal.V,)),
-            Production(NonTerminal.V, ("x",)),
-            Production(NonTerminal.V, ("*", NonTerminal.E)),
-        ])
+        grammar = Grammar(
+            [
+                Production(NonTerminal.N, (NonTerminal.V, "=", NonTerminal.E)),
+                Production(NonTerminal.N, (NonTerminal.E,)),
+                Production(NonTerminal.E, (NonTerminal.V,)),
+                Production(NonTerminal.V, ("x",)),
+                Production(NonTerminal.V, ("*", NonTerminal.E)),
+            ]
+        )
         parse_table = ParseTable(grammar, NonTerminal.N)
 
         self.assertEqual(

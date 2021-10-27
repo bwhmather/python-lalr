@@ -9,6 +9,6 @@ class _Constant(object):
         return "<{name}>".format(name=self._name)
 
 
-START = _Constant('S')
-EMPTY = _Constant('E')
-EOF = _Constant('$')
+START = _Constant("S")
+EMPTY = _Constant("E")
+EOF = _Constant("$")
