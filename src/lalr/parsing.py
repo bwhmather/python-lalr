@@ -4,7 +4,7 @@ from lalr.exceptions import ParseError
 
 def _or_list(values):
     if len(values) > 1:
-        return ", ".join(values[:-1]) + ' or ' + values[-1]
+        return ", ".join(values[:-1]) + " or " + values[-1]
     else:
         return values[0]
 
@@ -18,7 +18,10 @@ def _default_token_value(token):
 
 
 def parse(
-    parse_table, tokens, *, action,
+    parse_table,
+    tokens,
+    *,
+    action,
     token_symbol=_default_token_symbol,
     token_value=_default_token_value,
 ):
@@ -70,7 +73,9 @@ def parse(
         # token lookup functions.
         nonlocal lookahead_token, lookahead_symbol, lookahead_value
         lookahead_token, lookahead_symbol, lookahead_value = (
-            token, symbol, value,
+            token,
+            symbol,
+            value,
         )
 
     _advance()
@@ -95,8 +100,8 @@ def parse(
             # Pull the results for each of the symbols making up the production
             # from the stack.
             assert len(result_stack) >= len(production)
-            values = tuple(result_stack[-len(production):])
-            del result_stack[-len(production):]
+            values = tuple(result_stack[-len(production) :])
+            del result_stack[-len(production) :]
 
             value = action(production, *values)
             result_stack.append(value)
@@ -105,7 +110,7 @@ def parse(
             # production started.  These are no longer needed as they cannot
             # now appear just before the start of a new symbol.
             assert len(state_stack) > len(production)
-            del state_stack[-len(production):]
+            del state_stack[-len(production) :]
 
             # The top of the stack is now a state that contains an item with
             # the cursor just before the symbol that was just parsed.  From
@@ -134,9 +139,11 @@ def parse(
                     if token == EOF:
                         break
 
-                    production = parse_table.reductions(state_stack_[-1])[token]
+                    production = parse_table.reductions(state_stack_[-1])[
+                        token
+                    ]
 
-                    del state_stack_[-len(production):]
+                    del state_stack_[-len(production) :]
                     state_stack_.append(
                         parse_table.gotos(state_stack_[-1])[production.name]
                     )

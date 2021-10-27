@@ -5,7 +5,7 @@ from lalr.utils import Queue
 
 class ParseTestCase(unittest.TestCase):
     def test_iteration(self):
-        tasks = ['A', 'B', 'C', 'D', 'E', 'F']
+        tasks = ["A", "B", "C", "D", "E", "F"]
         queue = Queue(tasks)
 
         self.assertEqual([task for task in queue], tasks)

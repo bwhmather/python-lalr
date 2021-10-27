@@ -1,7 +1,6 @@
 from typing import Generic, Hashable, Iterable, List, Set, TypeVar
 
-
-T = TypeVar('T', bound=Hashable)
+T = TypeVar("T", bound=Hashable)
 
 
 class Queue(Iterable[T], Generic[T]):
@@ -9,6 +8,7 @@ class Queue(Iterable[T], Generic[T]):
     A simple task queue that will yield the items added to it exactly than
     once.
     """
+
     def __init__(self, items: Iterable[T] = []) -> None:
         # The set of all items that have been added to the queue.
         # TODO:  Benchmark to determine if this is actually faster.
@@ -73,7 +73,7 @@ class Queue(Iterable[T], Generic[T]):
         :return:
             An iterable of work items.
         """
-        return self._by_order[:self._cursor]
+        return self._by_order[: self._cursor]
 
     def __len__(self) -> int:
         """
