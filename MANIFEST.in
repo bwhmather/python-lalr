@@ -9,5 +9,8 @@ recursive-include lalr *.py
 include lalr/py.typed
 recursive-include lalr *.pyi
 
+# Include coniguration files.
+include setup.cfg
+
 # Include documentation.
 include README.rst LICENSE
