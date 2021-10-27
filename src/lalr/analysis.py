@@ -24,21 +24,6 @@ class _Item(object):
         self._cursor = cursor
         self._follow_set = frozenset(follow_set)
 
-    def __hash__(self):
-        return (
-            hash(self.production) ^ hash(self._cursor) ^ hash(self._follow_set)
-        )
-
-    def __eq__(self, other):
-        if not isinstance(other, self.__class__):
-            return NotImplemented
-
-        return (
-            self.production == other.production
-            and self._cursor == other._cursor
-            and self._follow_set == other.follow_set
-        )
-
     @property
     def cursor(self):
         """
@@ -88,12 +73,19 @@ class _Item(object):
         """
         return set(self._follow_set)
 
-    def __str__(self):
-        return "{name} -> {matched} * {expected}, {follow_set}".format(
-            name=self.name,
-            matched=" ".join(str(symbol) for symbol in self.matched),
-            expected=" ".join(str(symbol) for symbol in self.expected),
-            follow_set="/".join(str(symbol) for symbol in self.follow_set),
+    def __eq__(self, other):
+        if not isinstance(other, self.__class__):
+            return NotImplemented
+
+        return (
+            self.production == other.production
+            and self._cursor == other._cursor
+            and self._follow_set == other.follow_set
+        )
+
+    def __hash__(self):
+        return (
+            hash(self.production) ^ hash(self._cursor) ^ hash(self._follow_set)
         )
 
     def __repr__(self):
@@ -101,6 +93,14 @@ class _Item(object):
             production=self.production,
             cursor=self.cursor,
             follow_set=self.follow_set,
+        )
+
+    def __str__(self):
+        return "{name} -> {matched} * {expected}, {follow_set}".format(
+            name=self.name,
+            matched=" ".join(str(symbol) for symbol in self.matched),
+            expected=" ".join(str(symbol) for symbol in self.expected),
+            follow_set="/".join(str(symbol) for symbol in self.follow_set),
         )
 
 
@@ -124,11 +124,11 @@ class _ItemSet(object):
             self.derived,
         )
 
-    def __eq__(self, other):
-        return self.kernel == other.kernel
-
     def __iter__(self):
         return iter(self.items)
+
+    def __eq__(self, other):
+        return self.kernel == other.kernel
 
 
 def _build_derived_items(grammar, kernel):
@@ -434,9 +434,6 @@ class _State(object):
         self._table = table
         self._index = index
 
-    def __hash__(self):
-        return hash(self._index)
-
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return NotImplemented
@@ -445,6 +442,9 @@ class _State(object):
             self._table._item_sets[self._index]
             == other._table._item_sets[self._index]
         )
+
+    def __hash__(self):
+        return hash(self._index)
 
 
 class ParseTable(object):

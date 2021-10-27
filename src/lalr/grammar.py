@@ -24,17 +24,17 @@ class Production(object):
     def __setattr__(self, attr, value):
         raise AttributeError("can't set attributes on productions")
 
-    def __len__(self):
-        return len(self.symbols)
-
     def __getitem__(self, index):
         return self.symbols[index]
 
-    def __str__(self):
-        return "{name} -> {symbols}".format(
-            name=self.name,
-            symbols=" ".join(str(symbol) for symbol in self.symbols),
-        )
+    def __len__(self):
+        return len(self.symbols)
+
+    def __eq__(self, other):
+        return self.name == other.name and self.symbols == other.symbols
+
+    def __hash__(self):
+        return hash(self.name) ^ hash(self.symbols)
 
     def __repr__(self):
         return "Production({name}, {symbols})".format(
@@ -42,11 +42,11 @@ class Production(object):
             symbols=self.symbols,
         )
 
-    def __eq__(self, other):
-        return self.name == other.name and self.symbols == other.symbols
-
-    def __hash__(self):
-        return hash(self.name) ^ hash(self.symbols)
+    def __str__(self):
+        return "{name} -> {symbols}".format(
+            name=self.name,
+            symbols=" ".join(str(symbol) for symbol in self.symbols),
+        )
 
 
 class Grammar(object):

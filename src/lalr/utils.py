@@ -9,19 +9,6 @@ class Queue(Iterable[T], Generic[T]):
     once.
     """
 
-    def __init__(self, items: Iterable[T] = []) -> None:
-        # The set of all items that have been added to the queue.
-        # TODO:  Benchmark to determine if this is actually faster.
-        self._by_identity: Set[T] = set()
-
-        # A list, in order, of all items that have been added to the queue.
-        self._by_order: List[T] = list()
-
-        # The index of the next item to be processed in the `_by_order` array.
-        self._cursor: int = 0
-
-        self.update(items)
-
     def add(self, item: T):
         """
         Attempts to add an item to the end of the queue.
@@ -45,6 +32,19 @@ class Queue(Iterable[T], Generic[T]):
         """
         for item in items:
             self.add(item)
+
+    def __init__(self, items: Iterable[T] = []) -> None:
+        # The set of all items that have been added to the queue.
+        # TODO:  Benchmark to determine if this is actually faster.
+        self._by_identity: Set[T] = set()
+
+        # A list, in order, of all items that have been added to the queue.
+        self._by_order: List[T] = list()
+
+        # The index of the next item to be processed in the `_by_order` array.
+        self._cursor: int = 0
+
+        self.update(items)
 
     def pop(self) -> T:
         """
@@ -75,6 +75,15 @@ class Queue(Iterable[T], Generic[T]):
         """
         return self._by_order[: self._cursor]
 
+    def __next__(self) -> T:
+        try:
+            return self.pop()
+        except IndexError:
+            raise StopIteration()
+
+    def __iter__(self):
+        return self
+
     def __len__(self) -> int:
         """
         Returns the number of unprocessed items in the queue.
@@ -86,12 +95,3 @@ class Queue(Iterable[T], Generic[T]):
         Returns True if there are any items that are waiting to be processed.
         """
         return self._cursor != len(self._by_order)
-
-    def __iter__(self):
-        return self
-
-    def __next__(self) -> T:
-        try:
-            return self.pop()
-        except IndexError:
-            raise StopIteration()
