@@ -3,6 +3,10 @@ from lalr.exceptions import ParseError
 
 
 def _or_list(values):
+    # We rely on insertion order being maintained, as is guaranteed as of python
+    # 3.6, to give a stable result.  Can't use `sorted` as tokens may not be
+    # orderable.
+    values = list(values)
     if len(values) > 1:
         return ", ".join(values[:-1]) + " or " + values[-1]
     else:
@@ -157,7 +161,7 @@ def parse(
 
             if expected_symbols:
                 message = (
-                    f"expected {_or_list(sorted(expected_symbols))} "
+                    f"expected {_or_list(expected_symbols)} "
                     f"before {lookahead_symbol if lookahead_symbol is not EOF else 'EOF'}"
                 )
             else:
