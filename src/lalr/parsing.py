@@ -3,14 +3,12 @@ from lalr.exceptions import ParseError
 
 
 def _or_list(values):
-    # We rely on insertion order being maintained, as is guaranteed as of python
-    # 3.6, to give a stable result.  Can't use `sorted` as tokens may not be
-    # orderable.
-    values = list(values)
-    if len(values) > 1:
-        return ", ".join(values[:-1]) + " or " + values[-1]
+    # Values may not be sortable so we convert to strings first.
+    names = sorted(str(value) for value in values)
+    if len(names) > 1:
+        return ", ".join(names[:-1]) + " or " + names[-1]
     else:
-        return values[0]
+        return names[0]
 
 
 def _default_token_symbol(token):
