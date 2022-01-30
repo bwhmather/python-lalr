@@ -160,7 +160,7 @@ def parse(
             if expected_symbols:
                 message = (
                     f"expected {_or_list(expected_symbols)} "
-                    f"before {lookahead_symbol if lookahead_symbol is not EOF else 'EOF'}"
+                    f"before {lookahead_token if lookahead_symbol is not EOF else 'EOF'}"
                 )
             else:
                 message = f"expected EOF instead of {lookahead_symbol}"

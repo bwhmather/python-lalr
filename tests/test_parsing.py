@@ -3,7 +3,7 @@ import enum
 import pytest
 
 import lalr.exceptions
-from lalr import Grammar, ParseTable, Production, parse
+from lalr import Grammar, Left, ParseTable, Production, parse
 
 
 def nop(production, *args):
@@ -97,3 +97,36 @@ def test_enum_nonterminals():
     assert (
         parse(parse_table, ["x", "=", "*", "x"], action=nop) == NonTerminal.N
     )
+
+
+def test_precedence():
+    class Expr:
+        pass
+
+    grammar = Grammar(
+        [
+            Production(Expr, ("x",)),
+            Production(Expr, (Expr, "*", Expr)),
+            Production(Expr, (Expr, "/", Expr)),
+            Production(Expr, (Expr, "+", Expr)),
+            Production(Expr, (Expr, "-", Expr)),
+        ],
+        precedence_sets=[
+            Left("+", "-"),
+            Left("*", "/"),
+        ],
+    )
+    parse_table = ParseTable(grammar, Expr)
+
+    def _action(production, *args):
+        if len(args) == 1:
+            return args[0]
+        return tuple(args)
+
+    expected = ((("x", "-", "x"), "-", ("x", "*", "x")), "+", "x")
+    actual = parse(
+        parse_table,
+        ["x", "-", "x", "-", "x", "*", "x", "+", "x"],
+        action=_action,
+    )
+    assert actual == expected

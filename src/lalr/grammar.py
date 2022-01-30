@@ -1,7 +1,13 @@
+import enum
 import typing
 from types import MappingProxyType
 
 from lalr.utils import Queue
+
+
+class Associativity(enum.Enum):
+    LEFT = "LEFT"
+    RIGHT = "RIGHT"
 
 
 class Production(object):
@@ -49,8 +55,34 @@ class Production(object):
         )
 
 
+class Precedence:
+    __slots__ = ("terminals",)
+
+    terminals: frozenset
+
+    def __init__(self, *terminals):
+        object.__setattr__(self, "terminals", frozenset(terminals))
+
+    def __setattr__(self, attr, value):
+        raise AttributeError("can't set attributes on precedence sets")
+
+    def __repr__(self):
+        return "{name}({terminals})".format(
+            name=type(self).__name__,
+            terminals=", ".join(repr(terminal) for terminal in self.terminals),
+        )
+
+
+class Left(Precedence):
+    pass
+
+
+class Right(Precedence):
+    pass
+
+
 class Grammar(object):
-    def __init__(self, productions):
+    def __init__(self, productions, *, precedence_sets=None):
         self._productions = frozenset(productions)
 
         symbols = set()
@@ -110,6 +142,31 @@ class Grammar(object):
         # There should be a first set for every terminal and non-terminal
         assert self._symbols == frozenset(self._first_sets.keys())
 
+        if precedence_sets is None:
+            precedence_sets = []
+
+        # Only non terminals can appear in a precedence set.
+        for precedence_set in precedence_sets:
+            for terminal in precedence_set.terminals:
+                assert terminal in self._terminals
+
+        # Terminals can only appear in one precedence set.
+        seen = set()
+        for precedence_set in precedence_sets:
+            for terminal in precedence_set.terminals:
+                assert terminal not in seen
+                seen.add(terminal)
+
+        self._precedences = {}
+        self._associativities = {}
+        for precedence, precedence_set in enumerate(precedence_sets):
+            for terminal in precedence_set.terminals:
+                self._precedences[terminal] = precedence
+                if isinstance(precedence_set, Left):
+                    self._associativities[terminal] = Associativity.LEFT
+                if isinstance(precedence_set, Right):
+                    self._associativities[terminal] = Associativity.RIGHT
+
     def terminals(self):
         """
         The set of all symbols that appear on the right hand side of one or
@@ -155,3 +212,9 @@ class Grammar(object):
         set containing the terminal itself.
         """
         return self._first_sets[symbol]
+
+    def associativity(self, symbol):
+        return self._associativities.get(symbol)
+
+    def precedence(self, symbol):
+        return self._precedences.get(symbol)

@@ -2,7 +2,7 @@ from types import MappingProxyType
 
 from lalr.constants import EOF, START
 from lalr.exceptions import ReduceReduceConflictError, ShiftReduceConflictError
-from lalr.grammar import Production
+from lalr.grammar import Associativity, Production
 from lalr.utils import Queue
 
 
@@ -414,6 +414,44 @@ def _build_accept_table(grammar, item_sets, items_set_transitions):
     ]
 
 
+def _apply_precedence_rules(shifts, reductions, grammar):
+    for item_set_shifts, item_set_reductions in zip(shifts, reductions):
+
+        for symbol in set.intersection(
+            set(item_set_shifts), set(item_set_reductions)
+        ):
+            shift_precedence = grammar.precedence(symbol)
+            reduce_precedence = None
+            for production_symbol in item_set_reductions[symbol].symbols:
+                if grammar.is_terminal(production_symbol):
+                    reduce_precedence = grammar.precedence(production_symbol)
+
+            if (
+                shift_precedence is not None
+                and reduce_precedence is not None
+                and shift_precedence > reduce_precedence
+            ):
+                item_set_reductions.pop(symbol)
+                continue
+
+            if (
+                shift_precedence is not None
+                and reduce_precedence is not None
+                and reduce_precedence < shift_precedence
+            ):
+                item_set_shifts.pop(symbol)
+                continue
+
+            associativity = grammar.associativity(symbol)
+            if associativity == Associativity.RIGHT:
+                item_set_reductions.pop(symbol)
+                continue
+
+            if associativity == Associativity.LEFT:
+                item_set_shifts.pop(symbol)
+                continue
+
+
 def _check_shift_reduce_conflicts(shifts, reductions):
     """
     Check for conflicts between a shift table and a reduce table
@@ -472,6 +510,8 @@ class ParseTable(object):
             item_sets,
             transitions,
         )
+
+        _apply_precedence_rules(self._shifts, self._reductions, grammar)
 
         _check_shift_reduce_conflicts(self._shifts, self._reductions)
 
